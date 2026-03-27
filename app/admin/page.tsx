@@ -1,37 +1,45 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Menu, PackageCheck, ShoppingBasket, Users } from "lucide-react";
-import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { accountCatalog } from "@/lib/catalog";
+import { LayoutDashboard, PackageCheck, ShoppingBasket, Users } from "lucide-react";
+import { AdminShell } from "@/components/admin-shell";
+import { decodeSession, SESSION_COOKIE } from "@/lib/session";
+import { getAllProducts } from "@/lib/products-store";
 
-const stats = [
-  { label: "Acc dang ban", value: "128", icon: PackageCheck },
-  { label: "Don dang cho", value: "19", icon: ShoppingBasket },
-  { label: "User moi", value: "42", icon: Users },
-  { label: "Panel", value: "Admin", icon: LayoutDashboard },
-];
+export default async function AdminPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  const session = token ? decodeSession(token) : null;
 
-export default function AdminPage() {
+  if (!session || session.role !== "admin") {
+    redirect("/login");
+  }
+
+  const products = await getAllProducts();
+  const activeProducts = products.filter((p) => !p.status || p.status === "active");
+
+  const stats = [
+    { label: "Acc đang bán", value: String(activeProducts.length), icon: PackageCheck },
+    { label: "Tổng sản phẩm", value: String(products.length), icon: ShoppingBasket },
+    { label: "Admin", value: session.name, icon: Users },
+    { label: "Panel", value: "Sidebar", icon: LayoutDashboard },
+  ];
+
   return (
-    <>
-      <SiteHeader
-        links={[
-          { href: "/", label: "Store" },
-          { href: "/products", label: "San pham" },
-          { href: "/admin", label: "Dashboard" },
-          { href: "/login", label: "Thoat" },
-        ]}
-        mobileIcon={<Menu size={28} />}
-      />
-
-      <main className="dashboard-page">
-        <section className="dashboard-hero">
+    <AdminShell active="overview" sessionName={session.name}>
+      <div className="admin-page-stack">
+        <section className="admin-overview-hero">
           <div>
-            <span className="inventory-eyebrow">Admin dashboard</span>
-            <h1>Quan ly kho acc PUBG Mobile theo cung style cua storefront.</h1>
-            <p>Khong dung light theme mem. Dashboard nay giu den, do, trang va cac panel cat cheo de dong bo voi web ban hang.</p>
+            <span className="inventory-eyebrow">Overview</span>
+            <h1>Trung tâm quản lý acc PUBG Mobile theo dạng sidebar.</h1>
+            <p>
+              Màn này là overview mở đầu. Từ sidebar bên trái, bạn có thể đi sang account management để
+              xem danh sách sản phẩm hiện tại và thêm, sửa, xóa sản phẩm.
+            </p>
           </div>
-          <Link href="/products" className="dashboard-link">
-            Xem trang san pham
+
+          <Link href="/admin/products" className="dashboard-link">
+            Vào account management
           </Link>
         </section>
 
@@ -45,26 +53,27 @@ export default function AdminPage() {
           ))}
         </section>
 
-        <section className="dashboard-board">
+        <section className="admin-overview-grid">
           <div className="dashboard-table-card">
             <div className="dashboard-card-head">
-              <h2>Kho acc dang noi bat</h2>
-              <span>Sync voi trang chu va trang san pham</span>
+              <h2>Account management preview</h2>
+              <span>Danh sách sản phẩm hiện tại</span>
             </div>
+
             <div className="dashboard-table">
-              {accountCatalog.slice(0, 5).map((account) => (
-                <div key={account.id} className="dashboard-row">
+              {activeProducts.slice(0, 6).map((product) => (
+                <div key={product.id} className="dashboard-row">
                   <div>
-                    <strong>{account.title}</strong>
-                    <span>{account.code}</span>
+                    <strong>{product.title}</strong>
+                    <span>{product.code}</span>
                   </div>
                   <div>
-                    <strong>{account.tier}</strong>
-                    <span>{account.stats[0]}</span>
+                    <strong>{product.tier}</strong>
+                    <span>{product.skinXe || product.tag}</span>
                   </div>
                   <div>
-                    <strong>{account.price}</strong>
-                    <span>{account.tag}</span>
+                    <strong>{product.price}</strong>
+                    <span>{product.tag}</span>
                   </div>
                 </div>
               ))}
@@ -73,19 +82,18 @@ export default function AdminPage() {
 
           <div className="dashboard-side-card">
             <div className="dashboard-card-head">
-              <h2>Cong viec nhanh</h2>
-              <span>Skeleton de gan action that sau</span>
+              <h2>Đi nhanh</h2>
+              <span>Luồng quản trị chính</span>
             </div>
+
             <div className="dashboard-task-list">
-              <Link href="/accounts">Cap nhat bo anh account</Link>
-              <Link href="/products">Sua card gia va badge san pham</Link>
-              <Link href="/register">Tao them tai khoan admin / user</Link>
+              <Link href="/admin/products">Quản lý sản phẩm</Link>
+              <Link href="/products">Xem trang sản phẩm</Link>
+              <Link href="/products/glacier-x-suit-vault">Xem trang chi tiết mẫu</Link>
             </div>
           </div>
         </section>
-      </main>
-
-      <SiteFooter />
-    </>
+      </div>
+    </AdminShell>
   );
 }

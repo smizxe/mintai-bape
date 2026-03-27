@@ -1,0 +1,74 @@
+import Link from "next/link";
+import { ArrowLeft, Menu, ShoppingCart } from "lucide-react";
+import { notFound } from "next/navigation";
+import { ProductGallery } from "@/components/product-gallery";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { getProductBySlug } from "@/lib/catalog";
+
+export default async function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const product = getProductBySlug(slug);
+
+  if (!product) {
+    notFound();
+  }
+
+  return (
+    <>
+      <SiteHeader mobileIcon={<Menu size={28} />} />
+
+      <main className="inner-page">
+        <section className="product-detail-shell">
+          <div className="product-detail-back">
+            <Link href="/products">
+              <ArrowLeft size={16} />
+              Quay lại sản phẩm
+            </Link>
+          </div>
+
+          <div className="product-detail-grid">
+            <ProductGallery images={product.images} title={product.title} />
+
+            <div className="product-detail-info">
+              <div className="gallery-topline">
+                <span className={`tier-badge ${product.tierClass}`}>{product.tier}</span>
+                <span className="tag-dark">{product.tag}</span>
+              </div>
+              <h1>{product.title}</h1>
+              <p className="product-detail-summary">{product.shortDescription}</p>
+
+              <div className="next-match-tags">
+                {product.badges.map((badge) => (
+                  <span key={badge.label} className={badge.className}>
+                    {badge.label}
+                  </span>
+                ))}
+              </div>
+
+              <div className="product-detail-price">{product.price}</div>
+
+              <div
+                className="product-detail-description"
+                dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+              />
+
+              <div className="product-detail-actions">
+                <Link href="/user">
+                  <ShoppingCart size={16} />
+                  Mua ngay
+                </Link>
+                <Link href="/login">Đăng nhập để lưu giỏ hàng</Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter />
+    </>
+  );
+}

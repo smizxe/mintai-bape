@@ -1,30 +1,23 @@
 import Link from "next/link";
 import { Menu, ShoppingCart, Ticket, UserRound } from "lucide-react";
+import { MockSessionLink } from "@/components/mock-session-link";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { accountCatalog } from "@/lib/catalog";
 
 export default function UserPage() {
   return (
     <>
-      <SiteHeader
-        links={[
-          { href: "/", label: "Trang chu" },
-          { href: "/products", label: "San pham" },
-          { href: "/accounts", label: "Account" },
-          { href: "/user", label: "User" },
-        ]}
-        mobileIcon={<Menu size={28} />}
-      />
+      <SiteHeader mobileIcon={<Menu size={28} />} />
 
       <main className="dashboard-page">
         <section className="dashboard-hero">
           <div>
             <span className="inventory-eyebrow">User zone</span>
-            <h1>Giao dien user sau khi login vao shop.</h1>
-            <p>Trang nay gom tom tat gio hang, voucher, acc da xem va loi di tiep sang danh sach san pham.</p>
+            <h1>Giao diện user sau khi login vào shop.</h1>
+            <p>Trang này gồm tóm tắt giỏ hàng, voucher và lối đi tiếp sang danh sách sản phẩm.</p>
           </div>
           <Link href="/products" className="dashboard-link">
-            Tiep tuc mua acc
+            Tiếp tục mua acc
           </Link>
         </section>
 
@@ -32,24 +25,24 @@ export default function UserPage() {
           <article className="dashboard-stat-card">
             <ShoppingCart size={18} />
             <strong>03</strong>
-            <span>acc trong gio hang</span>
+            <span>acc trong giỏ hàng</span>
           </article>
           <article className="dashboard-stat-card">
             <Ticket size={18} />
             <strong>02</strong>
-            <span>uu dai kha dung</span>
+            <span>ưu đãi khả dụng</span>
           </article>
           <article className="dashboard-stat-card">
             <UserRound size={18} />
             <strong>VIP</strong>
-            <span>thanh vien uu tien</span>
+            <span>thành viên ưu tiên</span>
           </article>
         </section>
 
         <section className="dashboard-board">
           <div className="dashboard-table-card">
             <div className="dashboard-card-head">
-              <h2>Gio hang hien tai</h2>
+              <h2>Giỏ hàng hiện tại</h2>
               <span>Mock flow cho user</span>
             </div>
             <div className="dashboard-table">
@@ -64,7 +57,7 @@ export default function UserPage() {
                     <span>{account.tier}</span>
                   </div>
                   <div>
-                    <Link href="/products">Sua lua chon</Link>
+                    <Link href="/products">Sửa lựa chọn</Link>
                   </div>
                 </div>
               ))}
@@ -73,13 +66,15 @@ export default function UserPage() {
 
           <div className="dashboard-side-card">
             <div className="dashboard-card-head">
-              <h2>Loi di nhanh</h2>
-              <span>Flow user can dung tiep</span>
+              <h2>Lối đi nhanh</h2>
+              <span>Flow user cần dùng tiếp</span>
             </div>
             <div className="dashboard-task-list">
-              <Link href="/products">Mo tat ca san pham</Link>
-              <Link href="/accounts">Xem gallery account</Link>
-              <Link href="/login">Dang xuat mock</Link>
+              <Link href="/products">Mở tất cả sản phẩm</Link>
+              <Link href="/products/glacier-x-suit-vault">Xem chi tiết mẫu</Link>
+              <MockSessionLink href="/login" clearSession>
+                Đăng xuất mock
+              </MockSessionLink>
             </div>
           </div>
         </section>

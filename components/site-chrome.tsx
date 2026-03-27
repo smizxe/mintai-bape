@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Send } from "lucide-react";
 
@@ -7,13 +9,78 @@ type NavLink = {
   label: string;
 };
 
+type SessionRole = "guest" | "user" | "admin";
+
+const SESSION_KEY = "mintai-session-role";
+
+export const primaryNavLinks: NavLink[] = [
+  { href: "/", label: "Trang chủ" },
+  { href: "/products", label: "Kho acc" },
+  { href: "#", label: "Liên hệ" },
+];
+
+function getProfileLink(role: SessionRole): NavLink {
+  if (role === "admin") {
+    return { href: "/admin", label: "Hồ sơ" };
+  }
+
+  if (role === "user") {
+    return { href: "/user", label: "Hồ sơ" };
+  }
+
+  return { href: "/login", label: "Đăng nhập / Đăng ký" };
+}
+
+export function setMockSessionRole(role: Exclude<SessionRole, "guest">) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(SESSION_KEY, role);
+  window.dispatchEvent(new Event("mintai-session-change"));
+}
+
+export function clearMockSessionRole() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(SESSION_KEY);
+  window.dispatchEvent(new Event("mintai-session-change"));
+}
+
 export function SiteHeader({
-  links,
+  links = primaryNavLinks,
   mobileIcon,
 }: {
-  links: NavLink[];
+  links?: NavLink[];
   mobileIcon: ReactNode;
 }) {
+  const [sessionRole, setSessionRole] = useState<SessionRole>("guest");
+
+  useEffect(() => {
+    const syncSessionRole = () => {
+      const storedRole = window.localStorage.getItem(SESSION_KEY);
+      if (storedRole === "user" || storedRole === "admin") {
+        setSessionRole(storedRole);
+        return;
+      }
+
+      setSessionRole("guest");
+    };
+
+    syncSessionRole();
+    window.addEventListener("storage", syncSessionRole);
+    window.addEventListener("mintai-session-change", syncSessionRole);
+
+    return () => {
+      window.removeEventListener("storage", syncSessionRole);
+      window.removeEventListener("mintai-session-change", syncSessionRole);
+    };
+  }, []);
+
+  const finalLinks = [...links, getProfileLink(sessionRole)];
+
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -28,8 +95,12 @@ export function SiteHeader({
         </Link>
 
         <div className="nav-links">
-          {links.map((link, index) => (
-            <Link key={`${link.href}-${link.label}`} href={link.href} className={`nav-link ${index % 2 === 0 ? "nav-link--light" : "nav-link--dark"}`}>
+          {finalLinks.map((link, index) => (
+            <Link
+              key={`${link.href}-${link.label}`}
+              href={link.href}
+              className={`nav-link ${index % 2 === 0 ? "nav-link--light" : "nav-link--dark"}`}
+            >
               <span>{link.label}</span>
             </Link>
           ))}
@@ -82,7 +153,7 @@ export function SiteFooter() {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 MinTai Bape. Homepage, account, product, login, register, admin, user.</p>
+          <p>© 2026 MinTai Bape. Homepage, product, login, register, admin, user.</p>
         </div>
       </div>
 

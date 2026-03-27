@@ -1,71 +1,64 @@
 import Link from "next/link";
 import { ArrowRight, Mail, Menu, ShieldCheck, User, UserPlus } from "lucide-react";
+import { MockSessionLink } from "@/components/mock-session-link";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 export default function RegisterPage() {
   return (
     <>
-      <SiteHeader
-        links={[
-          { href: "/", label: "Trang chu" },
-          { href: "/accounts", label: "Account" },
-          { href: "/login", label: "Login" },
-          { href: "/register", label: "Register" },
-        ]}
-        mobileIcon={<Menu size={28} />}
-      />
+      <SiteHeader mobileIcon={<Menu size={28} />} />
 
       <main className="auth-page">
         <section className="auth-layout">
           <div className="auth-copy">
-            <span className="inventory-eyebrow">Register</span>
-            <h1>Tao tai khoan moi theo vai tro phu hop.</h1>
+            <span className="inventory-eyebrow">Đăng ký</span>
+            <h1>Tạo tài khoản mới theo vai trò phù hợp.</h1>
             <p>
-              Ban co the giu giao dien nay lam skeleton cho flow auth that. Hien tai minh phan tach san
-              2 huong vao admin va user de sau nay noi backend de hon.
+              Phần này là skeleton cho flow auth thật. Khi đã nối Supabase Auth hoặc auth riêng,
+              mình có thể thay form demo bằng flow thật mà không cần đổi layout.
             </p>
           </div>
 
           <div className="auth-panel">
             <div className="auth-switch">
-              <Link href="/login">Login</Link>
-              <span className="auth-switch-active">Register</span>
+              <Link href="/login">Đăng nhập</Link>
+              <span className="auth-switch-active">Đăng ký</span>
             </div>
 
             <form className="auth-form">
               <label>
-                <span>Ten hien thi</span>
+                <span>Tên hiển thị</span>
                 <div className="auth-input">
                   <UserPlus size={16} />
-                  <input type="text" placeholder="RoyalDrop Member" />
+                  <input type="text" placeholder="MinTai Bape Member" />
                 </div>
               </label>
               <label>
                 <span>Email</span>
                 <div className="auth-input">
                   <Mail size={16} />
-                  <input type="email" placeholder="user@royaldrop.vn" />
+                  <input type="email" placeholder="user@mintaibape.vn" />
                 </div>
               </label>
             </form>
 
             <div className="auth-actions-grid">
-              <Link className="auth-action-card auth-action-admin" href="/admin">
+              <MockSessionLink className="auth-action-card auth-action-admin" href="/admin" role="admin">
                 <ShieldCheck size={18} />
-                <strong>Tao admin demo</strong>
-                <span>Dung cho luong quan tri va demo dashboard.</span>
-              </Link>
-              <Link className="auth-action-card auth-action-user" href="/user">
+                <strong>Tạo admin demo</strong>
+                <span>Dùng cho luồng quản trị và demo dashboard.</span>
+              </MockSessionLink>
+              <MockSessionLink className="auth-action-card auth-action-user" href="/user" role="user">
                 <User size={18} />
-                <strong>Tao user demo</strong>
-                <span>Dung cho luong khach mua hang va gio hang.</span>
-              </Link>
+                <strong>Tạo user demo</strong>
+                <span>Dùng cho luồng khách mua hàng và giỏ hàng.</span>
+              </MockSessionLink>
             </div>
 
-            <Link className="auth-primary-link" href="/user">
-              Hoan tat dang ky
+            <MockSessionLink className="auth-primary-link" href="/user" role="user">
+              Hoàn tất đăng ký
               <ArrowRight size={18} />
-            </Link>
+            </MockSessionLink>
           </div>
         </section>
       </main>

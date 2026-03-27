@@ -1,13 +1,14 @@
+import Link from "next/link";
 import {
   ArrowRight,
+  BarChart3,
   Crosshair,
   Crown,
   Gamepad2,
-  BarChart3,
-  Shield,
-  Send,
   Menu,
+  Shield,
 } from "lucide-react";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 const inventory = [
   {
@@ -82,38 +83,7 @@ const featuredAccounts = [
 export default function Home() {
   return (
     <>
-      <nav className="navbar">
-        <div className="navbar-inner">
-          <div className="logo-block">
-            <div className="logo-front">
-              <span className="brand-kicker">PUBG Mobile Shop</span>
-              <h1>
-                <span className="accent">MinTai</span> Bape
-              </h1>
-            </div>
-            <div className="logo-shadow" />
-          </div>
-
-          <div className="nav-links">
-            <a href="#featured" className="nav-link nav-link--light">
-              <span>Acc nổi bật</span>
-            </a>
-            <a href="/products" className="nav-link nav-link--dark">
-              <span>Kho acc</span>
-            </a>
-            <a href="#" className="nav-link nav-link--light">
-              <span>Liên hệ</span>
-            </a>
-            <a href="/login" className="nav-link nav-link--dark">
-              <span>Login / Register</span>
-            </a>
-          </div>
-
-          <div className="mobile-menu">
-            <Menu size={28} />
-          </div>
-        </div>
-      </nav>
+      <SiteHeader mobileIcon={<Menu size={28} />} />
 
       <header className="hero">
         <div className="hero-bg-halftone bg-halftone" />
@@ -134,10 +104,11 @@ export default function Home() {
             </h2>
 
             <p className="hero-description">
-              Lướt qua từng tài khoản PUBG Mobile như đang chọn loadout trước giờ thả dù. Hiếm, rõ, giá gọn — bấm là chốt.
+              Lướt qua từng tài khoản PUBG Mobile như đang chọn loadout trước giờ thả dù. Hiếm, rõ, giá gọn
+              — bấm là chốt.
             </p>
 
-            <div className="hero-cta">
+            <Link href="/products" className="hero-cta">
               <div className="hero-cta-shadow" />
               <div className="hero-cta-front">
                 <span>
@@ -145,7 +116,7 @@ export default function Home() {
                   <ArrowRight size={20} />
                 </span>
               </div>
-            </div>
+            </Link>
 
             <div className="hero-metrics">
               <div className="hero-metric">
@@ -165,7 +136,7 @@ export default function Home() {
 
           <div className="hero-visual">
             <div className="showcase-frame">
-              <div className="showcase-badge">Acc Hot nhất!</div>
+              <div className="showcase-badge">Acc hot nhất!</div>
 
               <div className="showcase-inner">
                 <svg viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -258,7 +229,7 @@ export default function Home() {
         <div className="featured-container">
           <div className="featured-header">
             <h2 className="featured-title">Acc nổi bật tuần này</h2>
-            <p className="featured-subtitle">Ba tài khoản được tuyển chọn kỹ nhất — sẵn sàng vào trận.</p>
+            <p className="featured-subtitle">Sáu tài khoản được tuyển chọn kỹ nhất — sẵn sàng vào trận.</p>
           </div>
 
           <div className="featured-cards-grid">
@@ -271,10 +242,10 @@ export default function Home() {
                 <h3>{account.title}</h3>
                 <p>{account.meta}</p>
                 <div className="featured-account-price">{account.price}</div>
-                <a href="/products" className="featured-account-link">
+                <Link href="/products" className="featured-account-link">
                   Xem sản phẩm
                   <ArrowRight size={16} />
-                </a>
+                </Link>
               </article>
             ))}
           </div>
@@ -286,9 +257,7 @@ export default function Home() {
           <div className="inventory-header">
             <div className="inventory-eyebrow">Khám phá tất cả acc</div>
             <h2>Kho loadout đang mở — chọn acc vào trận</h2>
-            <p>
-              Quét nhanh, so sánh dễ. Nhìn một lượt là biết acc nào hợp ngân sách và gu sưu tầm của bạn.
-            </p>
+            <p>Quét nhanh, so sánh dễ. Nhìn một lượt là biết acc nào hợp ngân sách và gu sưu tầm của bạn.</p>
           </div>
 
           <div className="inventory-list">
@@ -312,45 +281,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="footer">
-        <div className="footer-jagged" />
-
-        <div className="footer-container">
-          <div className="footer-content">
-            <div className="footer-brand">
-              <h2>MinTai Bape</h2>
-              <p>Shop acc PUBG Mobile uy tín.</p>
-            </div>
-
-            <div className="footer-socials">
-              <a href="#" className="footer-social-link" aria-label="Facebook">f</a>
-              <a href="#" className="footer-social-link" aria-label="Zalo">Z</a>
-              <a href="#" className="footer-social-link" aria-label="Discord">D</a>
-            </div>
-
-            <div className="footer-newsletter">
-              <div className="footer-newsletter-title">
-                <span className="nl-white">Nhận</span>
-                <span className="nl-red">Thông</span>
-                <span className="nl-dark">Báo</span>
-                <span className="nl-yellow">Acc Mới</span>
-              </div>
-              <form className="footer-newsletter-form" action="#">
-                <input type="email" placeholder="Email hoặc Zalo..." />
-                <button type="button" aria-label="Gửi">
-                  <Send size={20} />
-                </button>
-              </form>
-            </div>
-          </div>
-
-          <div className="footer-bottom">
-            <p>© 2024 MinTai Bape. Shop acc PUBG Mobile.</p>
-          </div>
-        </div>
-
-        <div className="footer-corner bg-halftone" />
-      </footer>
+      <SiteFooter />
     </>
   );
 }
