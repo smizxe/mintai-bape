@@ -3,7 +3,7 @@ import { ArrowLeft, Menu, ShoppingCart } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/product-gallery";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { getProductBySlug } from "@/lib/catalog";
+import { getProductBySlug } from "@/lib/products-store";
 
 export default async function ProductDetailPage({
   params,
@@ -11,7 +11,7 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();

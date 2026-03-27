@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllProducts, createProduct, tierToClass, buildBadgesFromFields } from "@/lib/products-store";
+import { getAllProducts, createProduct, formatPriceLabel, tierToClass } from "@/lib/products-store";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   const { skinXe = "", thanhGiap = "", doBAPE = "", tier = "Starter" } = body;
+  const priceValue = Number(body.priceValue) || 0;
 
   const product = await createProduct({
     code: body.code ?? `RD-${Date.now()}`,
@@ -51,16 +52,14 @@ export async function POST(req: NextRequest) {
     tag: body.tag ?? "",
     tier,
     tierClass: tierToClass(tier),
-    price: body.price ?? "0đ",
-    priceValue: Number(body.priceValue) || 0,
+    price: formatPriceLabel(priceValue),
+    priceValue,
     summary: body.summary ?? "",
     shortDescription: body.shortDescription ?? "",
     descriptionHtml: body.descriptionHtml ?? "",
     skinXe,
     thanhGiap,
     doBAPE,
-    stats: [skinXe, thanhGiap, doBAPE].filter(Boolean),
-    badges: buildBadgesFromFields(skinXe, thanhGiap, doBAPE, tier),
     images: Array.isArray(body.images) ? body.images : [],
     status: body.status ?? "active",
   });

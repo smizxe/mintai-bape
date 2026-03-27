@@ -2,9 +2,11 @@ import Link from "next/link";
 import { Menu, ShoppingCart, Ticket, UserRound } from "lucide-react";
 import { MockSessionLink } from "@/components/mock-session-link";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { accountCatalog } from "@/lib/catalog";
+import { getAllProducts } from "@/lib/products-store";
 
-export default function UserPage() {
+export default async function UserPage() {
+  const products = await getAllProducts();
+
   return (
     <>
       <SiteHeader mobileIcon={<Menu size={28} />} />
@@ -46,15 +48,15 @@ export default function UserPage() {
               <span>Mock flow cho user</span>
             </div>
             <div className="dashboard-table">
-              {accountCatalog.slice(0, 3).map((account) => (
-                <div key={account.id} className="dashboard-row">
+              {products.slice(0, 3).map((product) => (
+                <div key={product.id} className="dashboard-row">
                   <div>
-                    <strong>{account.title}</strong>
-                    <span>{account.summary}</span>
+                    <strong>{product.title}</strong>
+                    <span>{product.summary}</span>
                   </div>
                   <div>
-                    <strong>{account.price}</strong>
-                    <span>{account.tier}</span>
+                    <strong>{product.price}</strong>
+                    <span>{product.tier}</span>
                   </div>
                   <div>
                     <Link href="/products">Sửa lựa chọn</Link>

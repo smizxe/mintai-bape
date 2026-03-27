@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateProduct, deleteProduct, tierToClass, buildBadgesFromFields } from "@/lib/products-store";
+import { updateProduct, deleteProduct, formatPriceLabel, tierToClass } from "@/lib/products-store";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
 
 function requireAdmin(req: NextRequest) {
@@ -19,7 +19,7 @@ export async function PUT(
   const { id } = await params;
   const body = await req.json();
 
-  const { skinXe = "", thanhGiap = "", doBAPE = "", tier } = body;
+  const { tier } = body;
 
   const update: Record<string, unknown> = { ...body };
 
@@ -27,11 +27,13 @@ export async function PUT(
     update.tierClass = tierToClass(tier);
   }
 
-  // Rebuild auto-generated fields when the three bullets change
-  if ("skinXe" in body || "thanhGiap" in body || "doBAPE" in body || "tier" in body) {
-    update.stats = [skinXe, thanhGiap, doBAPE].filter(Boolean);
-    update.badges = buildBadgesFromFields(skinXe, thanhGiap, doBAPE, tier ?? "");
+  if ("priceValue" in body) {
+    const priceValue = Number(body.priceValue) || 0;
+    update.priceValue = priceValue;
+    update.price = formatPriceLabel(priceValue);
   }
+
+  delete update.price;
 
   const product = await updateProduct(id, update);
 

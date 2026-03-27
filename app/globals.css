@@ -631,7 +631,7 @@ input {
 .featured-gallery-copy,
 .account-showcase-body,
 .product-card-body {
-  padding: 14px;
+  padding: 10px;
 }
 
 .stack-card-tag,
@@ -1098,10 +1098,11 @@ input {
 .accounts-grid,
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(3, minmax(0, 272px));
+  gap: 16px;
   position: relative;
   z-index: 1;
+  justify-content: start;
 }
 
 .featured-gallery-card,
@@ -1126,15 +1127,15 @@ input {
 .account-showcase-media,
 .product-card-media {
   position: relative;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 4 / 4.2;
   overflow: hidden;
 }
 
 .featured-gallery-copy h3,
 .account-showcase-body h3,
 .product-card-body h3 {
-  font-size: 1.7rem;
-  margin: 12px 0 8px;
+  font-size: 1.24rem;
+  margin: 8px 0 5px;
 }
 
 .gallery-topline {
@@ -2479,7 +2480,7 @@ input {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 3px 8px 3px 6px;
   border-left: 3px solid;
@@ -2505,9 +2506,8 @@ input {
 }
 
 .product-bullet-bape {
-  border-color: var(--rd-red);
-  color: #fff;
   border-color: #ff6b35;
+  color: #ff6b35;
 }
 
 /* ─── Admin logout button ───────────────────────────────── */
@@ -2715,147 +2715,236 @@ input {
 }
 
 /* Form panel */
-.admin-form-panel {
-  background: var(--rd-black);
+/* ═══════════════════════════════════════════════════
+   Modern Admin Form (af-*) — tabbed layout
+   ═══════════════════════════════════════════════════ */
+
+.af-panel {
+  background: linear-gradient(165deg, rgba(30,30,34,1) 0%, rgba(22,22,26,1) 100%);
   border: 1px solid var(--rd-border);
-  padding: 28px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  overflow: hidden;
 }
 
-.admin-form-head {
+.af-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--rd-border);
 }
 
-.admin-form-head h2 {
-  font-size: 1.1rem;
-  font-weight: 800;
-  text-transform: uppercase;
+.af-header h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
 }
 
-.admin-form-close {
+.af-close {
   background: none;
   border: none;
   color: var(--rd-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 6px;
   display: flex;
+  transition: all 0.15s;
 }
 
-.admin-form-close:hover {
+.af-close:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.06);
+}
+
+/* Tabs */
+.af-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--rd-border);
+  padding: 0 28px;
+  gap: 0;
+}
+
+.af-tab {
+  background: none;
+  border: none;
+  color: var(--rd-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 14px 20px;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s;
+}
+
+.af-tab::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.af-tab:hover {
+  color: #ccc;
+}
+
+.af-tab-active {
   color: #fff;
 }
 
-.admin-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+.af-tab-active::after {
+  background: var(--rd-red);
 }
 
-@media (max-width: 900px) {
-  .admin-form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.admin-form-section {
+/* Body */
+.af-body {
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
-.admin-form-section-label {
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--rd-muted);
-  border-bottom: 1px solid var(--rd-border);
-  padding-bottom: 8px;
+.af-body::-webkit-scrollbar {
+  width: 6px;
 }
 
-.admin-form-divider {
-  height: 1px;
-  background: var(--rd-border);
-  margin: 4px 0;
+.af-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.admin-field {
+.af-body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+}
+
+/* Fields */
+.af-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 0.85rem;
 }
 
-.admin-field span {
-  font-weight: 700;
+.af-field > span,
+.af-field-label {
+  font-weight: 600;
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--rd-muted);
 }
 
-.admin-field input,
-.admin-field select,
-.admin-field textarea {
-  background: var(--rd-grey);
+.af-field-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--rd-yellow);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.af-field input,
+.af-field select,
+.af-field textarea {
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--rd-border);
+  border-radius: 8px;
   color: #fff;
-  padding: 10px 12px;
+  padding: 10px 14px;
   font-size: 0.9rem;
   outline: none;
   resize: vertical;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.admin-field input:focus,
-.admin-field select:focus,
-.admin-field textarea:focus {
+.af-field input:focus,
+.af-field select:focus,
+.af-field textarea:focus {
   border-color: var(--rd-red);
+  box-shadow: 0 0 0 3px rgba(217,35,35,0.12);
 }
 
-.admin-field select option {
+.af-field select option {
   background: var(--rd-dark);
 }
 
-.admin-field-mono textarea {
-  font-family: monospace;
-  font-size: 0.82rem;
+/* Row layouts */
+.af-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.admin-field-row {
+.af-row-slug {
   display: flex;
   gap: 12px;
   align-items: flex-end;
 }
 
-.admin-field-row .admin-field {
+.af-row-slug .af-field {
   flex: 1;
 }
 
-.admin-slug-btn {
+/* Ghost button */
+.af-btn-ghost {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--rd-border);
+  color: var(--rd-muted);
+  padding: 10px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.15s;
   flex-shrink: 0;
   align-self: flex-end;
-  padding: 10px 12px;
-  font-size: 0.78rem;
-  white-space: nowrap;
+}
+
+.af-btn-ghost:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+}
+
+/* Divider & section label */
+.af-divider {
+  height: 1px;
+  background: var(--rd-border);
+  margin: 4px 0;
+}
+
+.af-section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--rd-muted);
+  margin: 0;
 }
 
 /* Bullet field accents */
-.admin-field-bullet .admin-field-bullet-xe input:focus {
-  border-color: var(--rd-yellow);
+.af-bullet-xe > span { color: var(--rd-yellow) !important; }
+.af-bullet-giap > span { color: var(--rd-blue) !important; }
+.af-bullet-bape > span { color: #ff6b35 !important; }
+
+.af-bullet-xe input { border-left: 3px solid var(--rd-yellow) !important; }
+.af-bullet-giap input { border-left: 3px solid var(--rd-blue) !important; }
+.af-bullet-bape input { border-left: 3px solid #ff6b35 !important; }
+
+/* Error */
+.af-error {
+  color: var(--rd-red);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0 28px;
 }
-
-.admin-field-bullet-xe span { color: var(--rd-yellow) !important; }
-.admin-field-bullet-giap span { color: var(--rd-blue) !important; }
-.admin-field-bullet-bape span { color: #ff6b35 !important; }
-
-.admin-field-bullet-xe input { border-left: 3px solid var(--rd-yellow); }
-.admin-field-bullet-giap input { border-left: 3px solid var(--rd-blue); }
-.admin-field-bullet-bape input { border-left: 3px solid #ff6b35; }
 
 .admin-form-error {
   color: var(--rd-red);
@@ -2863,13 +2952,193 @@ input {
   font-weight: 600;
 }
 
-.admin-form-actions {
+/* Footer */
+.af-footer {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  padding: 16px 28px;
   border-top: 1px solid var(--rd-border);
-  padding-top: 16px;
+  background: rgba(0,0,0,0.2);
 }
+
+/* ── React Quill overrides ─────────────────────────── */
+
+.af-quill-wrap .ql-toolbar {
+  border: 1px solid var(--rd-border) !important;
+  border-radius: 8px 8px 0 0 !important;
+  background: rgba(255,255,255,0.03);
+}
+
+.af-quill-wrap .ql-toolbar .ql-stroke {
+  stroke: var(--rd-muted) !important;
+}
+
+.af-quill-wrap .ql-toolbar .ql-fill {
+  fill: var(--rd-muted) !important;
+}
+
+.af-quill-wrap .ql-toolbar .ql-picker-label {
+  color: var(--rd-muted) !important;
+}
+
+.af-quill-wrap .ql-toolbar button:hover .ql-stroke,
+.af-quill-wrap .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #fff !important;
+}
+
+.af-quill-wrap .ql-toolbar button:hover .ql-fill,
+.af-quill-wrap .ql-toolbar button.ql-active .ql-fill {
+  fill: #fff !important;
+}
+
+.af-quill-wrap .ql-container {
+  border: 1px solid var(--rd-border) !important;
+  border-top: none !important;
+  border-radius: 0 0 8px 8px !important;
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  font-size: 0.9rem;
+  min-height: 180px;
+}
+
+.af-quill-wrap .ql-editor {
+  min-height: 180px;
+  line-height: 1.6;
+}
+
+.af-quill-wrap .ql-editor.ql-blank::before {
+  color: rgba(255,255,255,0.25) !important;
+  font-style: normal !important;
+}
+
+.af-quill-wrap .ql-picker-options {
+  background: var(--rd-dark) !important;
+  border-color: var(--rd-border) !important;
+}
+
+.af-quill-wrap .ql-picker-item {
+  color: var(--rd-muted) !important;
+}
+
+.af-quill-wrap .ql-picker-item:hover {
+  color: #fff !important;
+}
+
+/* ── Image upload ──────────────────────────────────── */
+
+.af-upload-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.af-dropzone {
+  border: 2px dashed var(--rd-border);
+  border-radius: 10px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.02);
+}
+
+.af-dropzone:hover {
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.04);
+}
+
+.af-dropzone-active {
+  border-color: var(--rd-red) !important;
+  background: rgba(217,35,35,0.06) !important;
+}
+
+.af-dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--rd-muted);
+}
+
+.af-dropzone-content svg {
+  opacity: 0.5;
+}
+
+.af-dropzone-hint {
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+.af-spin {
+  animation: af-spin 1s linear infinite;
+}
+
+@keyframes af-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.af-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.af-image-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--rd-border);
+  background: var(--rd-grey);
+}
+
+.af-thumb-img {
+  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.af-thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.7);
+  border: none;
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.af-image-thumb:hover .af-thumb-remove {
+  opacity: 1;
+}
+
+.af-thumb-main {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(217,35,35,0.85);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 2px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Legacy form styles (kept for admin-form-error) ── */
+/* admin-form-actions removed — replaced by af-footer */
 
 /* Products table */
 .admin-products-table {
