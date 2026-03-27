@@ -1,0 +1,15 @@
+<svg width="800" height="960" viewBox="0 0 800 960" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="960" fill="#171717"/>
+  <rect x="44" y="44" width="712" height="872" fill="#F4EFE6" stroke="#111111" stroke-width="8"/>
+  <rect x="92" y="90" width="616" height="184" fill="#111111"/>
+  <text x="122" y="190" fill="#FFFFFF" font-size="84" font-family="Arial" font-weight="700">NIGHT OPS</text>
+  <text x="122" y="252" fill="#FFFFFF" font-size="62" font-family="Arial" font-weight="700">COLLECTION</text>
+  <rect x="92" y="336" width="616" height="166" fill="#D92323"/>
+  <text x="118" y="430" fill="#FFFFFF" font-size="70" font-family="Arial" font-weight="700">72 SKIN</text>
+  <rect x="92" y="560" width="290" height="86" fill="#7DD35C"/>
+  <rect x="418" y="560" width="290" height="86" fill="#111111"/>
+  <text x="138" y="616" fill="#111111" font-size="42" font-family="Arial" font-weight="700">MYTHIC</text>
+  <text x="488" y="616" fill="#FFFFFF" font-size="42" font-family="Arial" font-weight="700">5.25M</text>
+  <text x="96" y="758" fill="#111111" font-size="42" font-family="Arial" font-weight="700">KHO HIEM DE KHOA DU NHIP O GRID 6 ANH</text>
+  <text x="96" y="830" fill="#111111" font-size="34" font-family="Arial" font-weight="700">DUNG DE DAY CAM GIAC BO SUU TAP PREMIUM</text>
+</svg>

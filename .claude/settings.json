@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(timeout 8 cat \"C:\\\\Users\\\\vuong\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Project-Code-Kiem-Tien-shop-acc-pubgm\\\\1f69bee7-d55d-4a74-a027-3583a933bea7\\\\tasks\\\\bz135mcej.output\")",
+      "Bash(npx next:*)"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+<svg width="800" height="960" viewBox="0 0 800 960" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="960" fill="#111111"/>
+  <rect x="34" y="34" width="732" height="892" rx="18" fill="#1E1E1E" stroke="#D92323" stroke-width="8"/>
+  <rect x="84" y="90" width="632" height="280" fill="#D92323"/>
+  <rect x="84" y="370" width="632" height="456" fill="#F4EFE6"/>
+  <text x="100" y="185" fill="#FFFFFF" font-size="94" font-family="Arial" font-weight="700">GLACIER</text>
+  <text x="100" y="285" fill="#FFFFFF" font-size="70" font-family="Arial" font-weight="700">X-SUIT VAULT</text>
+  <text x="104" y="450" fill="#111111" font-size="42" font-family="Arial" font-weight="700">89 SKIN</text>
+  <text x="104" y="510" fill="#111111" font-size="42" font-family="Arial" font-weight="700">3 UPGRADE GUN</text>
+  <text x="104" y="570" fill="#111111" font-size="42" font-family="Arial" font-weight="700">LEVEL 76</text>
+  <rect x="104" y="640" width="260" height="74" fill="#111111"/>
+  <text x="132" y="690" fill="#FFFFFF" font-size="48" font-family="Arial" font-weight="700">6.9M</text>
+  <circle cx="618" cy="696" r="74" fill="#FFCC33" stroke="#111111" stroke-width="8"/>
+  <text x="575" y="714" fill="#111111" font-size="42" font-family="Arial" font-weight="700">TOP</text>
+  <text x="104" y="810" fill="#111111" font-size="34" font-family="Arial" font-weight="700">ROYAL DROP / FEATURED ACCOUNT</text>
+</svg>

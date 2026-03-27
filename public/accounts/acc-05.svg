@@ -1,0 +1,13 @@
+<svg width="800" height="960" viewBox="0 0 800 960" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="960" fill="#111111"/>
+  <rect x="50" y="50" width="700" height="860" fill="#202020" stroke="#D92323" stroke-width="8"/>
+  <rect x="90" y="92" width="620" height="280" fill="#F4EFE6"/>
+  <text x="118" y="206" fill="#111111" font-size="82" font-family="Arial" font-weight="700">STEALTH CRATE</text>
+  <text x="118" y="292" fill="#111111" font-size="76" font-family="Arial" font-weight="700">PREMIUM</text>
+  <circle cx="618" cy="238" r="70" fill="#D92323"/>
+  <text x="582" y="252" fill="#FFFFFF" font-size="34" font-family="Arial" font-weight="700">54</text>
+  <rect x="90" y="430" width="620" height="120" fill="#FFCC33"/>
+  <text x="122" y="504" fill="#111111" font-size="58" font-family="Arial" font-weight="700">3.75M / ELITE</text>
+  <text x="94" y="632" fill="#F4EFE6" font-size="42" font-family="Arial" font-weight="700">EMOTE HIEM, KHO DO CAN DOI, VISUAL DAY GIUA PAGE</text>
+  <text x="94" y="740" fill="#F4EFE6" font-size="34" font-family="Arial" font-weight="700">ROYAL DROP / PRODUCT CARD / COMIC COMMERCE</text>
+</svg>
