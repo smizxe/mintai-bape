@@ -16,7 +16,7 @@ const barlow = Barlow({
 
 export const metadata: Metadata = {
   title: "MinTai Bape - Shop Acc PUBG Mobile",
-  description: "Shop tai khoan PUBG Mobile voi giao dien gaming manh, ro, va de chot don.",
+  description: "Kho acc PUBG Mobile rõ ràng, dễ chọn, dễ chốt và sẵn sàng vào trận.",
 };
 
 export default function RootLayout({

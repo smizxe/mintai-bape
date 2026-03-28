@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { clearMockSessionRole } from "@/components/site-chrome";
+import { notifyAuthChanged } from "@/lib/auth-client";
 
 export function LogoutButton({
   children,
@@ -14,8 +14,9 @@ export function LogoutButton({
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    clearMockSessionRole();
+    notifyAuthChanged();
     router.push("/login");
+    router.refresh();
   }
 
   return (

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateCredentials, encodeSession, SESSION_COOKIE, ROLE_COOKIE } from "@/lib/session";
+import { encodeSession, ROLE_COOKIE, SESSION_COOKIE, validateCredentials } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
@@ -8,15 +8,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email và mật khẩu không được để trống" }, { status: 400 });
   }
 
-  const user = validateCredentials(email, password);
+  const user = await validateCredentials(email, password);
 
   if (!user) {
     return NextResponse.json({ error: "Email hoặc mật khẩu không đúng" }, { status: 401 });
   }
 
   const response = NextResponse.json({ role: user.role, name: user.name });
-
-  const maxAge = 60 * 60 * 24 * 7; // 7 days
+  const maxAge = 60 * 60 * 24 * 7;
 
   response.cookies.set(SESSION_COOKIE, encodeSession(user), {
     httpOnly: true,

@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Send } from "lucide-react";
+import { AUTH_EVENT, getRoleFromDocumentCookie } from "@/lib/auth-client";
 
 type NavLink = {
   href: string;
@@ -11,42 +12,25 @@ type NavLink = {
 
 type SessionRole = "guest" | "user" | "admin";
 
-const SESSION_KEY = "mintai-session-role";
-
 export const primaryNavLinks: NavLink[] = [
   { href: "/", label: "Trang chủ" },
   { href: "/products", label: "Kho acc" },
   { href: "#", label: "Liên hệ" },
 ];
 
-function getProfileLink(role: SessionRole): NavLink {
-  if (role === "admin") {
-    return { href: "/admin", label: "Hồ sơ" };
-  }
-
+function getUserLinks(role: SessionRole): NavLink[] {
   if (role === "user") {
-    return { href: "/user", label: "Hồ sơ" };
+    return [
+      { href: "/cart", label: "Giỏ hàng" },
+      { href: "/user", label: "Hồ sơ" },
+    ];
   }
 
-  return { href: "/login", label: "Đăng nhập / Đăng ký" };
-}
-
-export function setMockSessionRole(role: Exclude<SessionRole, "guest">) {
-  if (typeof window === "undefined") {
-    return;
+  if (role === "admin") {
+    return [{ href: "/admin", label: "Hồ sơ" }];
   }
 
-  window.localStorage.setItem(SESSION_KEY, role);
-  window.dispatchEvent(new Event("mintai-session-change"));
-}
-
-export function clearMockSessionRole() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.removeItem(SESSION_KEY);
-  window.dispatchEvent(new Event("mintai-session-change"));
+  return [{ href: "/login", label: "Đăng nhập / Đăng ký" }];
 }
 
 export function SiteHeader({
@@ -61,26 +45,20 @@ export function SiteHeader({
 
   useEffect(() => {
     const syncSessionRole = () => {
-      const storedRole = window.localStorage.getItem(SESSION_KEY);
-      if (storedRole === "user" || storedRole === "admin") {
-        setSessionRole(storedRole);
-        return;
-      }
-
-      setSessionRole("guest");
+      setSessionRole(getRoleFromDocumentCookie());
     };
 
     syncSessionRole();
     window.addEventListener("storage", syncSessionRole);
-    window.addEventListener("mintai-session-change", syncSessionRole);
+    window.addEventListener(AUTH_EVENT, syncSessionRole);
 
     return () => {
       window.removeEventListener("storage", syncSessionRole);
-      window.removeEventListener("mintai-session-change", syncSessionRole);
+      window.removeEventListener(AUTH_EVENT, syncSessionRole);
     };
   }, []);
 
-  const finalLinks = [...links, getProfileLink(sessionRole)];
+  const finalLinks = [...links, ...getUserLinks(sessionRole)];
 
   return (
     <nav className="navbar">
@@ -101,16 +79,17 @@ export function SiteHeader({
               key={`${link.href}-${link.label}`}
               href={link.href}
               className={`nav-link ${index % 2 === 0 ? "nav-link--light" : "nav-link--dark"}`}
+              onClick={() => setIsMobileMenuOpen(false)}
             >
               <span>{link.label}</span>
             </Link>
           ))}
         </div>
 
-        <button 
+        <button
           className="mobile-menu"
-          aria-label="Toggle mobile menu"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Mở menu"
+          onClick={() => setIsMobileMenuOpen((open) => !open)}
         >
           {mobileIcon}
         </button>
@@ -145,7 +124,7 @@ export function SiteFooter() {
         <div className="footer-content">
           <div className="footer-brand">
             <h2>MinTai Bape</h2>
-            <p>Shop acc PUBG Mobile theo style comic combat.</p>
+            <p>Nơi chọn acc PUBG Mobile rõ ràng, nhanh gọn và dễ chốt.</p>
           </div>
 
           <div className="footer-socials">
@@ -177,7 +156,7 @@ export function SiteFooter() {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 MinTai Bape. Homepage, product, login, register, admin, user.</p>
+          <p>© 2026 MinTai Bape. Chọn đúng acc, vào trận nhanh.</p>
         </div>
       </div>
 

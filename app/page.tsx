@@ -1,13 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  BarChart3,
-  Crosshair,
-  Crown,
-  Menu,
-  Shield,
-} from "lucide-react";
+import { ArrowRight, BarChart3, Crosshair, Crown, Menu, Shield } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { getAllProducts, getFeaturedHeroProduct, getFeaturedWeekProducts } from "@/lib/products-store";
 
@@ -15,7 +8,6 @@ export default async function Home() {
   const allProducts = (await getAllProducts()).filter((product) => product.status === "active");
   const featuredHeroProduct = (await getFeaturedHeroProduct()) ?? allProducts[0] ?? null;
   const featuredWeekProducts = await getFeaturedWeekProducts(3);
-  const inventoryProducts = allProducts.length > 0 ? allProducts.slice(0, 4) : featuredWeekProducts;
   const weeklyProducts = featuredWeekProducts.length > 0 ? featuredWeekProducts : allProducts.slice(0, 3);
 
   return (
@@ -41,8 +33,8 @@ export default async function Home() {
             </h2>
 
             <p className="hero-description">
-              Lướt qua từng tài khoản PUBG Mobile như đang chọn loadout trước giờ thả dù.
-              Hiếm, rõ, giá gọn và dữ liệu thật từ sản phẩm đang bán.
+              Chọn nhanh tài khoản PUBG Mobile phù hợp với lối chơi của bạn. Ảnh rõ, thông tin gọn, giá
+              dễ chốt.
             </p>
 
             <Link href="/products" className="hero-cta">
@@ -61,8 +53,8 @@ export default async function Home() {
                 <span>acc đang lên kệ</span>
               </div>
               <div className="hero-metric">
-                <strong>24h</strong>
-                <span>chu kỳ cập nhật</span>
+                <strong>24H</strong>
+                <span>cập nhật liên tục</span>
               </div>
               <div className="hero-metric">
                 <strong>Top Tier</strong>
@@ -120,7 +112,7 @@ export default async function Home() {
                     <Crosshair size={22} />
                   </div>
                   <h3>Chọn acc nhanh</h3>
-                  <p>Dữ liệu rõ ràng, giá gọn, ảnh thật. Lướt một lượt là biết acc nào đáng chốt.</p>
+                  <p>Xem một lượt là biết ngay acc nào đáng chốt, không mất thời gian lọc lại từ đầu.</p>
                 </div>
               </div>
             </div>
@@ -134,8 +126,8 @@ export default async function Home() {
                   <div className="feature-icon-box feature-icon-box--white">
                     <BarChart3 size={22} />
                   </div>
-                  <h3>Data rõ ràng</h3>
-                  <p>Skin, level, nâng cấp, rank và loại acc đều hiện trực tiếp trên card để so sánh nhanh.</p>
+                  <h3>Thông tin rõ ràng</h3>
+                  <p>Skin, rank, điểm nổi bật và mức giá được hiển thị gọn để bạn so sánh nhanh hơn.</p>
                 </div>
               </div>
             </div>
@@ -149,8 +141,8 @@ export default async function Home() {
                   <div className="feature-icon-box feature-icon-box--black">
                     <Shield size={22} />
                   </div>
-                  <h3>Mua bán an toàn</h3>
-                  <p>Tài khoản được kiểm tra kỹ, đăng nhập ổn định và có hỗ trợ rõ ràng sau mua.</p>
+                  <h3>Chốt acc yên tâm</h3>
+                  <p>Chọn đúng tài khoản mình cần, xem ảnh trước khi mua và vào trận nhanh hơn.</p>
                 </div>
               </div>
             </div>
@@ -166,7 +158,7 @@ export default async function Home() {
         <div className="featured-container">
           <div className="featured-header">
             <h2 className="featured-title">Acc nổi bật tuần này</h2>
-            <p className="featured-subtitle">Ba tài khoản được chọn thật từ admin, sẵn sàng vào trận.</p>
+            <p className="featured-subtitle">Ba lựa chọn được săn nhiều, sẵn sàng để bạn vào trận ngay.</p>
           </div>
 
           <div className="featured-cards-grid featured-cards-grid-compact">
@@ -229,31 +221,35 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="inventory-section" id="inventory">
+      <section className="inventory-section inventory-section-cta" id="inventory">
         <div className="inventory-container">
-          <div className="inventory-header">
-            <div className="inventory-eyebrow">Khám phá tất cả acc</div>
-            <h2>Kho loadout đang mở và chọn acc vào trận</h2>
-            <p>Quét nhanh, so sánh nhanh. Dữ liệu dưới đây lấy trực tiếp từ sản phẩm thật đang có trên cửa hàng.</p>
+          <div className="inventory-header inventory-header-cta">
+            <div className="inventory-eyebrow">Vào kho acc ngay</div>
+            <h2>Lấy Acc Của Bạn Ngay</h2>
+            <p>Vào kho acc để lọc nhanh, xem ảnh thật và chọn đúng tài khoản phù hợp với ngân sách của bạn.</p>
           </div>
 
-          <div className="inventory-list">
-            {inventoryProducts.map((item) => (
-              <article key={item.id} className="inventory-row">
-                <div className="inventory-row-info">
-                  <span className={`tier-badge ${item.tierClass}`}>{item.tier}</span>
-                  <h3>{item.title}</h3>
-                  <p>{item.summary}</p>
+          <div className="inventory-cta-panel">
+            <div className="inventory-cta-copy">
+              <span className="inventory-cta-kicker">Kho acc PUBG Mobile</span>
+              <h3>Chọn đúng acc, chốt nhanh, vào trận tự tin hơn.</h3>
+              <p>
+                Từ acc ngon, acc hiếm cho tới acc xịn, mọi lựa chọn đều đã sẵn sàng trong kho để bạn xem
+                chi tiết và quyết định nhanh hơn.
+              </p>
+            </div>
+
+            <div className="inventory-cta-actions">
+              <Link href="/products" className="hero-cta hero-cta-inline">
+                <div className="hero-cta-shadow" />
+                <div className="hero-cta-front">
+                  <span>
+                    Lấy acc ngay
+                    <ArrowRight size={20} />
+                  </span>
                 </div>
-                <div className="inventory-row-price">
-                  <strong>{item.price}</strong>
-                  <Link href={`/products/${item.slug}`}>
-                    Xem acc này
-                    <ArrowRight size={14} />
-                  </Link>
-                </div>
-              </article>
-            ))}
+              </Link>
+            </div>
           </div>
         </div>
       </section>

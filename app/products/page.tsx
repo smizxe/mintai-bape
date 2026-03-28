@@ -24,8 +24,10 @@ export default async function ProductsPage() {
         <section className="page-hero page-hero-light">
           <div className="section-heading">
             <span className="inventory-eyebrow">Kho acc</span>
-            <h1>Danh sách acc PUBG Mobile chọn lọc</h1>
-            <p>Tất cả sản phẩm được cập nhật thực từ admin. Filter theo skin xe, thánh giáp hoặc đồ BAPE.</p>
+            <h1>Chọn acc PUBG Mobile phù hợp với bạn</h1>
+            <p>
+              Lọc nhanh theo skin, loại acc và mức giá để tìm đúng tài khoản bạn muốn chốt.
+            </p>
           </div>
         </section>
 

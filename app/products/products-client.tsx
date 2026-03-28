@@ -4,9 +4,11 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Search, SlidersHorizontal } from "lucide-react";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import type { Product } from "@/lib/products-store";
 
 type FilterKey = "skinXe" | "thanhGiap" | "doBAPE";
+type SortKey = "newest" | "oldest" | "price-asc" | "price-desc";
 
 type FilterState = {
   skins: FilterKey[];
@@ -14,6 +16,7 @@ type FilterState = {
   search: string;
   priceFrom: number | "";
   priceTo: number | "";
+  sortBy: SortKey;
 };
 
 const SKIN_OPTIONS: Array<{ key: FilterKey; label: string }> = [
@@ -22,12 +25,20 @@ const SKIN_OPTIONS: Array<{ key: FilterKey; label: string }> = [
   { key: "doBAPE", label: "Đồ BAPE" },
 ];
 
+const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
+  { key: "newest", label: "Mới nhất → Cũ nhất" },
+  { key: "oldest", label: "Cũ nhất → Mới nhất" },
+  { key: "price-asc", label: "Giá thấp tới cao" },
+  { key: "price-desc", label: "Giá cao tới thấp" },
+];
+
 const EMPTY_FILTER: FilterState = {
   skins: [],
   accountTypes: [],
   search: "",
   priceFrom: "",
   priceTo: "",
+  sortBy: "newest",
 };
 
 export function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
@@ -45,7 +56,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
   const filtered = useMemo(() => {
     const query = appliedFilters.search.trim().toLowerCase();
 
-    return initialProducts.filter((product) => {
+    const matches = initialProducts.filter((product) => {
       const matchesSkin =
         appliedFilters.skins.length === 0 || appliedFilters.skins.every((key) => Boolean(product[key]));
 
@@ -73,6 +84,22 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
 
       return matchesSkin && matchesType && matchesSearch && matchesPrice;
     });
+
+    return [...matches].sort((a, b) => {
+      if (appliedFilters.sortBy === "oldest") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+
+      if (appliedFilters.sortBy === "price-asc") {
+        return a.priceValue - b.priceValue;
+      }
+
+      if (appliedFilters.sortBy === "price-desc") {
+        return b.priceValue - a.priceValue;
+      }
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }, [appliedFilters, initialProducts]);
 
   const hasAppliedFilters =
@@ -80,7 +107,8 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
     appliedFilters.accountTypes.length > 0 ||
     Boolean(appliedFilters.search.trim()) ||
     appliedFilters.priceFrom !== "" ||
-    appliedFilters.priceTo !== "";
+    appliedFilters.priceTo !== "" ||
+    appliedFilters.sortBy !== "newest";
 
   function toggleDraftSkin(key: FilterKey) {
     setDraftFilters((prev) => ({
@@ -105,6 +133,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
       search: draftFilters.search,
       priceFrom: draftFilters.priceFrom,
       priceTo: draftFilters.priceTo,
+      sortBy: draftFilters.sortBy,
     });
   }
 
@@ -148,6 +177,27 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                 onClick={() => toggleDraftType(type)}
               >
                 {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-section">
+          <span className="filter-section-title">Sắp xếp</span>
+          <div className="filter-chip-row filter-chip-column">
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                className={`filter-chip ${draftFilters.sortBy === option.key ? "filter-chip-active" : ""}`}
+                onClick={() =>
+                  setDraftFilters((prev) => ({
+                    ...prev,
+                    sortBy: option.key,
+                  }))
+                }
+              >
+                {option.label}
               </button>
             ))}
           </div>
@@ -219,12 +269,13 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
             {appliedFilters.skins.length > 0 && ` · ${appliedFilters.skins.length} bộ lọc skin`}
             {appliedFilters.accountTypes.length > 0 && ` · ${appliedFilters.accountTypes.length} loại acc`}
             {appliedFilters.search.trim() && ` · "${appliedFilters.search.trim()}"`}
+            {appliedFilters.sortBy !== "newest" && " · đã sắp xếp"}
           </p>
         )}
 
         {filtered.length === 0 ? (
           <div className="products-empty">
-            <p>Không tìm thấy sản phẩm phù hợp với điều kiện đang lưu.</p>
+            <p>Chưa tìm thấy acc phù hợp với lựa chọn hiện tại.</p>
             <button type="button" className="filter-chip" onClick={resetFilters}>
               Xóa bộ lọc
             </button>
@@ -276,7 +327,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                   <div className="product-card-bottom">
                     <strong>{account.price}</strong>
                     <div className="product-card-actions">
-                      <Link href="/user">Mua ngay</Link>
+                      <AddToCartButton productId={account.id} />
                       <Link href={`/products/${account.slug}`}>
                         Xem chi tiết
                         <ArrowRight size={15} />

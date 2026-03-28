@@ -1,17 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, Menu, ShieldCheck, User } from "lucide-react";
-import { SiteFooter, SiteHeader, setMockSessionRole } from "@/components/site-chrome";
+import { Lock, Mail, Menu } from "lucide-react";
+import { notifyAuthChanged } from "@/lib/auth-client";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+
+function resolveRedirectTarget(role: "admin" | "user", nextPath: string | null) {
+  const fallback = role === "admin" ? "/admin" : "/user";
+  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
+    return fallback;
+  }
+
+  if (role === "user" && nextPath.startsWith("/admin")) {
+    return fallback;
+  }
+
+  if (role === "admin" && nextPath.startsWith("/user")) {
+    return fallback;
+  }
+
+  return nextPath;
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const [nextPath, setNextPath] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setNextPath(params.get("next"));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,19 +52,21 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Đăng nhập thất bại. Thử lại.");
+        setError(data.error ?? "Đăng nhập thất bại. Vui lòng thử lại.");
         return;
       }
 
-      // sync localStorage so SiteHeader updates immediately
-      setMockSessionRole(data.role);
-      router.push(data.role === "admin" ? "/admin" : "/user");
+      notifyAuthChanged();
+      router.push(resolveRedirectTarget(data.role, nextPath));
+      router.refresh();
     } catch {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setError("Không thể kết nối ngay lúc này. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
   }
+
+  const registerHref = nextPath ? `/register?next=${encodeURIComponent(nextPath)}` : "/register";
 
   return (
     <>
@@ -50,34 +76,26 @@ export default function LoginPage() {
         <section className="auth-layout">
           <div className="auth-copy">
             <span className="inventory-eyebrow">Đăng nhập</span>
-            <h1>Đăng nhập để quản lý hoặc mua acc PUBG Mobile.</h1>
-            <p>Admin vào dashboard quản lý kho. User vào trang mua hàng bình thường.</p>
-            <div className="auth-role-strip">
-              <div className="auth-role-pill">
-                <ShieldCheck size={18} />
-                <span>Admin: admin@mintaibape.vn</span>
-              </div>
-              <div className="auth-role-pill">
-                <User size={18} />
-                <span>User: user@mintaibape.vn</span>
-              </div>
-            </div>
+            <h1>Đăng nhập để tiếp tục chọn acc bạn muốn.</h1>
+            <p>
+              Theo dõi tài khoản, vào hồ sơ cá nhân và tiếp tục chốt những acc phù hợp với nhu cầu của bạn.
+            </p>
           </div>
 
           <div className="auth-panel">
             <div className="auth-switch">
               <span className="auth-switch-active">Đăng nhập</span>
-              <Link href="/register">Đăng ký</Link>
+              <Link href={registerHref}>Đăng ký</Link>
             </div>
 
             <form className="auth-form" onSubmit={handleSubmit}>
               <label>
                 <span>Email</span>
                 <div className="auth-input">
-                  <User size={16} />
+                  <Mail size={16} />
                   <input
                     type="email"
-                    placeholder="admin@mintaibape.vn"
+                    placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -85,6 +103,7 @@ export default function LoginPage() {
                   />
                 </div>
               </label>
+
               <label>
                 <span>Mật khẩu</span>
                 <div className="auth-input">
@@ -106,10 +125,6 @@ export default function LoginPage() {
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </button>
             </form>
-
-            <p className="auth-hint">
-              Demo — Admin: mintai2024 &nbsp;|&nbsp; User: user2024
-            </p>
           </div>
         </section>
       </main>

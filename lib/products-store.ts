@@ -23,9 +23,10 @@ export type Product = {
   status: string;
   isFeaturedHero: boolean;
   featuredWeekRank: number | null;
+  createdAt: string;
 };
 
-type ProductPayload = Omit<Product, "id" | "stats" | "badges">;
+type ProductPayload = Omit<Product, "id" | "stats" | "badges" | "createdAt">;
 type ProductRecord = Prisma.ProductGetPayload<{
   include: {
     images: true;
@@ -108,6 +109,7 @@ function mapProduct(record: ProductRecord): Product {
     status: statusToUi(record.status),
     isFeaturedHero: record.isFeaturedHero ?? false,
     featuredWeekRank: record.featuredWeekRank ?? null,
+    createdAt: record.createdAt.toISOString(),
   };
 }
 

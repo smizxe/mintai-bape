@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Menu, ShoppingCart } from "lucide-react";
 import { notFound } from "next/navigation";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductGallery } from "@/components/product-gallery";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { getProductBySlug } from "@/lib/products-store";
@@ -57,11 +58,11 @@ export default async function ProductDetailPage({
               />
 
               <div className="product-detail-actions">
-                <Link href="/user">
+                <AddToCartButton productId={product.id} className="product-detail-cart-button" />
+                <Link href="/cart">
                   <ShoppingCart size={16} />
-                  Mua ngay
+                  Xem giỏ hàng
                 </Link>
-                <Link href="/login">Đăng nhập để lưu giỏ hàng</Link>
               </div>
             </div>
           </div>
