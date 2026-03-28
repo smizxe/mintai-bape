@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, PackageCheck, ShoppingBasket, Users } from "lucide-react";
+import { LayoutDashboard, PackageCheck, ShoppingBasket, Tags } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
 import { getAllProducts } from "@/lib/products-store";
+import { getAllAccountTypes } from "@/lib/account-types-store";
 
 export default async function AdminPage() {
   const cookieStore = await cookies();
@@ -15,14 +16,18 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const products = await getAllProducts();
+  const [products, accountTypes] = await Promise.all([
+    getAllProducts(),
+    getAllAccountTypes(),
+  ]);
+
   const activeProducts = products.filter((p) => !p.status || p.status === "active");
 
   const stats = [
     { label: "Acc đang bán", value: String(activeProducts.length), icon: PackageCheck },
     { label: "Tổng sản phẩm", value: String(products.length), icon: ShoppingBasket },
-    { label: "Admin", value: session.name, icon: Users },
-    { label: "Panel", value: "Sidebar", icon: LayoutDashboard },
+    { label: "Loại acc", value: String(accountTypes.length), icon: Tags },
+    { label: "Bố cục", value: "Sidebar", icon: LayoutDashboard },
   ];
 
   return (
@@ -30,16 +35,16 @@ export default async function AdminPage() {
       <div className="admin-page-stack">
         <section className="admin-overview-hero">
           <div>
-            <span className="inventory-eyebrow">Overview</span>
-            <h1>Trung tâm quản lý acc PUBG Mobile theo dạng sidebar.</h1>
+            <span className="inventory-eyebrow">Tổng quan</span>
+            <h1>Trung tâm quản trị account PUBG Mobile theo dạng sidebar.</h1>
             <p>
-              Màn này là overview mở đầu. Từ sidebar bên trái, bạn có thể đi sang account management để
-              xem danh sách sản phẩm hiện tại và thêm, sửa, xóa sản phẩm.
+              Từ sidebar bên trái, bạn có thể đi sang quản lý account để thêm và sửa sản phẩm,
+              hoặc sang kiểm soát loại acc để tự tạo các nhóm như acc gà, acc xịn hay acc hiếm.
             </p>
           </div>
 
           <Link href="/admin/products" className="dashboard-link">
-            Vào account management
+            Vào quản lý account
           </Link>
         </section>
 
@@ -56,8 +61,8 @@ export default async function AdminPage() {
         <section className="admin-overview-grid">
           <div className="dashboard-table-card">
             <div className="dashboard-card-head">
-              <h2>Account management preview</h2>
-              <span>Danh sách sản phẩm hiện tại</span>
+              <h2>Xem nhanh account</h2>
+              <span>Các sản phẩm mới nhất đang có trong kho.</span>
             </div>
 
             <div className="dashboard-table">
@@ -83,13 +88,13 @@ export default async function AdminPage() {
           <div className="dashboard-side-card">
             <div className="dashboard-card-head">
               <h2>Đi nhanh</h2>
-              <span>Luồng quản trị chính</span>
+              <span>Các khu quản trị chính</span>
             </div>
 
             <div className="dashboard-task-list">
-              <Link href="/admin/products">Quản lý sản phẩm</Link>
-              <Link href="/products">Xem trang sản phẩm</Link>
-              <Link href="/products/glacier-x-suit-vault">Xem trang chi tiết mẫu</Link>
+              <Link href="/admin/products">Quản lý account</Link>
+              <Link href="/admin/account-types">Kiểm soát loại acc</Link>
+              <Link href="/products">Xem cửa hàng</Link>
             </div>
           </div>
         </section>

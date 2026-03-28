@@ -1,179 +1,252 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowRight, Search, SlidersHorizontal } from "lucide-react";
 import type { Product } from "@/lib/products-store";
 
-const FILTER_CHIPS = [
+type FilterKey = "skinXe" | "thanhGiap" | "doBAPE";
+
+type FilterState = {
+  skins: FilterKey[];
+  accountTypes: string[];
+  search: string;
+};
+
+const SKIN_OPTIONS: Array<{ key: FilterKey; label: string }> = [
   { key: "skinXe", label: "Skin xe" },
   { key: "thanhGiap", label: "Thánh giáp" },
   { key: "doBAPE", label: "Đồ BAPE" },
-  { key: "mythic", label: "Mythic" },
-  { key: "elite", label: "Elite" },
-  { key: "cheap", label: "Dưới 3 triệu" },
 ];
 
+const EMPTY_FILTER: FilterState = {
+  skins: [],
+  accountTypes: [],
+  search: "",
+};
+
 export function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
-  const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const accountTypeOptions = useMemo(
+    () =>
+      Array.from(new Set(initialProducts.map((product) => product.tier).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, "vi"),
+      ),
+    [initialProducts],
+  );
+
+  const [draftFilters, setDraftFilters] = useState<FilterState>(EMPTY_FILTER);
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>(EMPTY_FILTER);
 
   const filtered = useMemo(() => {
-    let list = initialProducts;
+    const query = appliedFilters.search.trim().toLowerCase();
 
-    if (activeFilter === "skinXe") list = list.filter((p) => p.skinXe);
-    if (activeFilter === "thanhGiap") list = list.filter((p) => p.thanhGiap);
-    if (activeFilter === "doBAPE") list = list.filter((p) => p.doBAPE);
-    if (activeFilter === "mythic") list = list.filter((p) => p.tier === "Mythic");
-    if (activeFilter === "elite") list = list.filter((p) => p.tier === "Elite");
-    if (activeFilter === "cheap") list = list.filter((p) => p.priceValue < 3000000);
+    return initialProducts.filter((product) => {
+      const matchesSkin =
+        appliedFilters.skins.length === 0 ||
+        appliedFilters.skins.every((key) => Boolean(product[key]));
 
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.summary.toLowerCase().includes(q) ||
-          p.code.toLowerCase().includes(q) ||
-          p.skinXe?.toLowerCase().includes(q) ||
-          p.thanhGiap?.toLowerCase().includes(q) ||
-          p.doBAPE?.toLowerCase().includes(q) ||
-          p.shortDescription?.toLowerCase().includes(q),
-      );
-    }
+      const matchesType =
+        appliedFilters.accountTypes.length === 0 ||
+        appliedFilters.accountTypes.includes(product.tier);
 
-    return list;
-  }, [initialProducts, activeFilter, search]);
+      const matchesSearch =
+        !query ||
+        product.title.toLowerCase().includes(query) ||
+        product.summary.toLowerCase().includes(query) ||
+        product.code.toLowerCase().includes(query) ||
+        product.tier.toLowerCase().includes(query) ||
+        product.skinXe?.toLowerCase().includes(query) ||
+        product.thanhGiap?.toLowerCase().includes(query) ||
+        product.doBAPE?.toLowerCase().includes(query) ||
+        product.shortDescription?.toLowerCase().includes(query);
 
-  function toggleFilter(key: string) {
-    setActiveFilter((prev) => (prev === key ? null : key));
+      return matchesSkin && matchesType && matchesSearch;
+    });
+  }, [appliedFilters, initialProducts]);
+
+  const hasAppliedFilters =
+    appliedFilters.skins.length > 0 ||
+    appliedFilters.accountTypes.length > 0 ||
+    Boolean(appliedFilters.search.trim());
+
+  function toggleDraftSkin(key: FilterKey) {
+    setDraftFilters((prev) => ({
+      ...prev,
+      skins: prev.skins.includes(key)
+        ? prev.skins.filter((item) => item !== key)
+        : [...prev.skins, key],
+    }));
+  }
+
+  function toggleDraftType(type: string) {
+    setDraftFilters((prev) => ({
+      ...prev,
+      accountTypes: prev.accountTypes.includes(type)
+        ? prev.accountTypes.filter((item) => item !== type)
+        : [...prev.accountTypes, type],
+    }));
+  }
+
+  function applyFilters() {
+    setAppliedFilters({
+      skins: [...draftFilters.skins],
+      accountTypes: [...draftFilters.accountTypes],
+      search: draftFilters.search,
+    });
+  }
+
+  function resetFilters() {
+    setDraftFilters(EMPTY_FILTER);
+    setAppliedFilters(EMPTY_FILTER);
   }
 
   return (
     <section className="products-shell">
-      {/* Filter + Search bar */}
-      <div className="filter-bar">
+      <aside className="filter-bar">
         <div className="filter-label">
           <SlidersHorizontal size={18} />
-          <span>Bộ lọc nhanh</span>
+          <span>Bộ lọc acc</span>
         </div>
-        <div className="filter-chip-row">
-          {FILTER_CHIPS.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              className={`filter-chip ${activeFilter === chip.key ? "filter-chip-active" : ""}`}
-              onClick={() => toggleFilter(chip.key)}
-            >
-              {chip.label}
-              {activeFilter === chip.key && <X size={12} style={{ marginLeft: 4 }} />}
-            </button>
-          ))}
-        </div>
-        <div className="filter-search-wrap">
-          <Search size={15} className="filter-search-icon" />
-          <input
-            type="text"
-            className="filter-search-input"
-            placeholder="Tìm acc, skin xe, BAPE..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button
-              type="button"
-              className="filter-search-clear"
-              onClick={() => setSearch("")}
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-      </div>
 
-      {/* Results count */}
-      {(search || activeFilter) && (
-        <p className="products-result-count">
-          {filtered.length} kết quả{" "}
-          {activeFilter && `· ${FILTER_CHIPS.find((c) => c.key === activeFilter)?.label}`}
-          {search && ` · "${search}"`}
-        </p>
-      )}
+        <div className="filter-section">
+          <span className="filter-section-title">Lọc theo skin</span>
+          <div className="filter-chip-row filter-chip-column">
+            {SKIN_OPTIONS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                className={`filter-chip ${draftFilters.skins.includes(option.key) ? "filter-chip-active" : ""}`}
+                onClick={() => toggleDraftSkin(option.key)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {/* Grid */}
-      {filtered.length === 0 ? (
-        <div className="products-empty">
-          <p>Không tìm thấy sản phẩm phù hợp.</p>
-          <button
-            type="button"
-            className="filter-chip"
-            onClick={() => {
-              setSearch("");
-              setActiveFilter(null);
-            }}
-          >
+        <div className="filter-section">
+          <span className="filter-section-title">Lọc theo loại acc</span>
+          <div className="filter-chip-row filter-chip-column">
+            {accountTypeOptions.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className={`filter-chip ${draftFilters.accountTypes.includes(type) ? "filter-chip-active" : ""}`}
+                onClick={() => toggleDraftType(type)}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-section">
+          <span className="filter-section-title">Tìm acc, skin, đồ</span>
+          <div className="filter-search-wrap">
+            <Search size={15} className="filter-search-icon" />
+            <input
+              type="text"
+              className="filter-search-input"
+              placeholder="Tìm acc, skin xe, BAPE..."
+              value={draftFilters.search}
+              onChange={(event) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  search: event.target.value,
+                }))
+              }
+            />
+          </div>
+        </div>
+
+        <div className="filter-actions">
+          <button type="button" className="filter-apply-button" onClick={applyFilters}>
+            Lưu bộ lọc
+          </button>
+          <button type="button" className="filter-reset-button" onClick={resetFilters}>
             Xóa bộ lọc
           </button>
         </div>
-      ) : (
-        <div className="products-grid">
-          {filtered.map((account) => (
-            <article key={account.id} className="product-card">
-              <div className="product-card-media">
-                <Image
-                  src={account.images[0] ?? "/accounts/acc-01.svg"}
-                  alt={account.title}
-                  fill
-                  sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
-                />
-                <span className="product-card-badge">{account.code}</span>
-              </div>
-              <div className="product-card-body">
-                <div className="gallery-topline">
-                  <span className={`tier-badge ${account.tierClass}`}>{account.tier}</span>
-                  <span className="tag-dark">{account.tag}</span>
-                </div>
-                <h3>{account.title}</h3>
-                <p>{account.summary}</p>
+      </aside>
 
-                {/* Three bullet fields */}
-                <div className="product-bullets">
-                  {account.skinXe && (
-                    <span className="product-bullet product-bullet-xe">
-                      <span className="bullet-label">Skin xe</span>
-                      {account.skinXe}
-                    </span>
-                  )}
-                  {account.thanhGiap && (
-                    <span className="product-bullet product-bullet-giap">
-                      <span className="bullet-label">Thánh giáp</span>
-                      {account.thanhGiap}
-                    </span>
-                  )}
-                  {account.doBAPE && (
-                    <span className="product-bullet product-bullet-bape">
-                      <span className="bullet-label">BAPE</span>
-                      {account.doBAPE}
-                    </span>
-                  )}
+      <div className="products-results">
+        {hasAppliedFilters && (
+          <p className="products-result-count">
+            {filtered.length} kết quả
+            {appliedFilters.skins.length > 0 && ` · ${appliedFilters.skins.length} bộ lọc skin`}
+            {appliedFilters.accountTypes.length > 0 && ` · ${appliedFilters.accountTypes.length} loại acc`}
+            {appliedFilters.search.trim() && ` · "${appliedFilters.search.trim()}"`}
+          </p>
+        )}
+
+        {filtered.length === 0 ? (
+          <div className="products-empty">
+            <p>Không tìm thấy sản phẩm phù hợp với điều kiện đang lưu.</p>
+            <button type="button" className="filter-chip" onClick={resetFilters}>
+              Xóa bộ lọc
+            </button>
+          </div>
+        ) : (
+          <div className="products-grid">
+            {filtered.map((account) => (
+              <article key={account.id} className="product-card">
+                <div className="product-card-media">
+                  <Image
+                    src={account.images[0] ?? "/accounts/acc-01.svg"}
+                    alt={account.title}
+                    fill
+                    sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
+                  />
+                  <span className="product-card-badge">{account.code}</span>
                 </div>
 
-                <div className="product-card-bottom">
-                  <strong>{account.price}</strong>
-                  <div className="product-card-actions">
-                    <Link href="/user">Mua ngay</Link>
-                    <Link href={`/products/${account.slug}`}>
-                      Xem chi tiết
-                      <ArrowRight size={15} />
-                    </Link>
+                <div className="product-card-body">
+                  <div className="gallery-topline">
+                    <span className={`tier-badge ${account.tierClass}`}>{account.tier}</span>
+                    <span className="tag-dark">{account.tag}</span>
+                  </div>
+
+                  <h3>{account.title}</h3>
+                  <p>{account.summary}</p>
+
+                  <div className="product-bullets">
+                    {account.skinXe && (
+                      <span className="product-bullet product-bullet-xe">
+                        <span className="bullet-label">Skin xe</span>
+                        {account.skinXe}
+                      </span>
+                    )}
+                    {account.thanhGiap && (
+                      <span className="product-bullet product-bullet-giap">
+                        <span className="bullet-label">Thánh giáp</span>
+                        {account.thanhGiap}
+                      </span>
+                    )}
+                    {account.doBAPE && (
+                      <span className="product-bullet product-bullet-bape">
+                        <span className="bullet-label">BAPE</span>
+                        {account.doBAPE}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="product-card-bottom">
+                    <strong>{account.price}</strong>
+                    <div className="product-card-actions">
+                      <Link href="/user">Mua ngay</Link>
+                      <Link href={`/products/${account.slug}`}>
+                        Xem chi tiết
+                        <ArrowRight size={15} />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

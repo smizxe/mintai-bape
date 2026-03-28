@@ -54,6 +54,16 @@ model Product {
   cartItems        CartItem[]
 }
 
+model AccountType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  className String   @default("tier-starter")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model ProductImage {
   id         String   @id @default(cuid())
   productId  String

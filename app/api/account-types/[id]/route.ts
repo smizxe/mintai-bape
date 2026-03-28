@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateProduct, deleteProduct, formatPriceLabel, tierToClass } from "@/lib/products-store";
+import { deleteAccountType, updateAccountType } from "@/lib/account-types-store";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
-import { resolveAccountTypeClass } from "@/lib/account-types-store";
 
 function requireAdmin(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
@@ -20,29 +19,17 @@ export async function PUT(
   const { id } = await params;
   const body = await req.json();
 
-  const { tier } = body;
+  const item = await updateAccountType(id, {
+    name: body.name,
+    className: body.className,
+    sortOrder: Number(body.sortOrder ?? 0) || 0,
+  });
 
-  const update: Record<string, unknown> = { ...body };
-
-  if (tier) {
-    update.tierClass = (await resolveAccountTypeClass(tier)) || tierToClass(tier);
+  if (!item) {
+    return NextResponse.json({ error: "Không tìm thấy loại acc" }, { status: 404 });
   }
 
-  if ("priceValue" in body) {
-    const priceValue = Number(body.priceValue) || 0;
-    update.priceValue = priceValue;
-    update.price = formatPriceLabel(priceValue);
-  }
-
-  delete update.price;
-
-  const product = await updateProduct(id, update);
-
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
-  }
-
-  return NextResponse.json(product);
+  return NextResponse.json(item);
 }
 
 export async function DELETE(
@@ -54,10 +41,10 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const ok = await deleteProduct(id);
+  const ok = await deleteAccountType(id);
 
   if (!ok) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    return NextResponse.json({ error: "Không xóa được loại acc" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true });

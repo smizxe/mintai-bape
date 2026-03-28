@@ -1,10 +1,16 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BarChart3, ExternalLink, LayoutDashboard, Package2 } from "lucide-react";
+import {
+  BarChart3,
+  ExternalLink,
+  LayoutDashboard,
+  Package2,
+  Tags,
+} from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 
 type AdminShellProps = {
-  active: "overview" | "products";
+  active: "overview" | "products" | "account-types";
   sessionName: string;
   children: ReactNode;
 };
@@ -15,8 +21,8 @@ export function AdminShell({ active, sessionName, children }: AdminShellProps) {
       <aside className="admin-sidebar">
         <div className="admin-sidebar-brand">
           <span className="admin-sidebar-kicker">MinTai Bape</span>
-          <strong>Admin Dashboard</strong>
-          <p>Quản lý overview và kho sản phẩm từ một sidebar cố định.</p>
+          <strong>Admin dashboard</strong>
+          <p>Quan ly tong quan, account va loai acc tu mot sidebar co dinh.</p>
         </div>
 
         <nav className="admin-sidebar-nav">
@@ -25,18 +31,28 @@ export function AdminShell({ active, sessionName, children }: AdminShellProps) {
             className={`admin-sidebar-link ${active === "overview" ? "admin-sidebar-link-active" : ""}`}
           >
             <LayoutDashboard size={18} />
-            <span>Overview</span>
+            <span>Tổng quan</span>
           </Link>
+
           <Link
             href="/admin/products"
             className={`admin-sidebar-link ${active === "products" ? "admin-sidebar-link-active" : ""}`}
           >
             <Package2 size={18} />
-            <span>Account management</span>
+            <span>Quản lý account</span>
           </Link>
+
+          <Link
+            href="/admin/account-types"
+            className={`admin-sidebar-link ${active === "account-types" ? "admin-sidebar-link-active" : ""}`}
+          >
+            <Tags size={18} />
+            <span>Kiểm soát loại acc</span>
+          </Link>
+
           <Link href="/products" className="admin-sidebar-link">
             <ExternalLink size={18} />
-            <span>Xem storefront</span>
+            <span>Xem cửa hàng</span>
           </Link>
         </nav>
 
