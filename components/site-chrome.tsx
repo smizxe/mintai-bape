@@ -57,6 +57,7 @@ export function SiteHeader({
   mobileIcon: ReactNode;
 }) {
   const [sessionRole, setSessionRole] = useState<SessionRole>("guest");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const syncSessionRole = () => {
@@ -106,8 +107,31 @@ export function SiteHeader({
           ))}
         </div>
 
-        <div className="mobile-menu">{mobileIcon}</div>
+        <button 
+          className="mobile-menu"
+          aria-label="Toggle mobile menu"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {mobileIcon}
+        </button>
       </div>
+
+      {isMobileMenuOpen && (
+        <div className="mobile-menu-overlay">
+          <div className="mobile-menu-inner">
+            {finalLinks.map((link, index) => (
+              <Link
+                key={`mobile-${link.href}-${link.label}`}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`mobile-nav-link ${index % 2 === 0 ? "mobile-nav-link--light" : "mobile-nav-link--dark"}`}
+              >
+                <span>{link.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

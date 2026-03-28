@@ -1,86 +1,23 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
   Crosshair,
   Crown,
-  Gamepad2,
   Menu,
   Shield,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { getAllProducts, getFeaturedHeroProduct, getFeaturedWeekProducts } from "@/lib/products-store";
 
-const inventory = [
-  {
-    name: "Stealth Crate ID 1024",
-    tier: "Elite",
-    tierClass: "tier-elite",
-    price: "1.750.000đ",
-    loadout: "38 skin, 1 nâng cấp, outfit hiếm",
-  },
-  {
-    name: "Winner Pass Vault ID 1870",
-    tier: "Rare",
-    tierClass: "tier-rare",
-    price: "3.150.000đ",
-    loadout: "54 skin, nhiều emote, rank đẹp",
-  },
-  {
-    name: "X-Suit Locker ID 2201",
-    tier: "Mythic",
-    tierClass: "tier-mythic",
-    price: "7.200.000đ",
-    loadout: "92 skin, 3 nâng cấp, lobby nổi bật",
-  },
-  {
-    name: "Balanced Combat ID 3114",
-    tier: "Starter+",
-    tierClass: "tier-starter",
-    price: "980.000đ",
-    loadout: "28 skin, tài nguyên ổn, dễ vào trận",
-  },
-];
+export default async function Home() {
+  const allProducts = (await getAllProducts()).filter((product) => product.status === "active");
+  const featuredHeroProduct = (await getFeaturedHeroProduct()) ?? allProducts[0] ?? null;
+  const featuredWeekProducts = await getFeaturedWeekProducts(3);
+  const inventoryProducts = allProducts.length > 0 ? allProducts.slice(0, 4) : featuredWeekProducts;
+  const weeklyProducts = featuredWeekProducts.length > 0 ? featuredWeekProducts : allProducts.slice(0, 3);
 
-const featuredAccounts = [
-  {
-    title: "Glacier Sưu Tập",
-    price: "6.900.000đ",
-    meta: "89 skin • Mythic • Lv. 76",
-    tag: "Hot nhất",
-  },
-  {
-    title: "Mythic Ranked",
-    price: "4.500.000đ",
-    meta: "61 skin • Ace Master",
-    tag: "Rank đẹp",
-  },
-  {
-    title: "UC Bonus Full Set",
-    price: "2.890.000đ",
-    meta: "47 skin • Set hiếm",
-    tag: "Deal nhanh",
-  },
-  {
-    title: "Winner Pass Locker",
-    price: "980.000đ",
-    meta: "Starter+ • Đăng nhập ổn",
-    tag: "Giá mềm",
-  },
-  {
-    title: "Stealth Crate",
-    price: "3.150.000đ",
-    meta: "54 skin • Emote đẹp",
-    tag: "Elite",
-  },
-  {
-    title: "X-Suit Locker",
-    price: "7.200.000đ",
-    meta: "92 skin • Lobby nổi bật",
-    tag: "Top tier",
-  },
-];
-
-export default function Home() {
   return (
     <>
       <SiteHeader mobileIcon={<Menu size={28} />} />
@@ -104,8 +41,8 @@ export default function Home() {
             </h2>
 
             <p className="hero-description">
-              Lướt qua từng tài khoản PUBG Mobile như đang chọn loadout trước giờ thả dù. Hiếm, rõ, giá gọn
-              — bấm là chốt.
+              Lướt qua từng tài khoản PUBG Mobile như đang chọn loadout trước giờ thả dù.
+              Hiếm, rõ, giá gọn và dữ liệu thật từ sản phẩm đang bán.
             </p>
 
             <Link href="/products" className="hero-cta">
@@ -120,7 +57,7 @@ export default function Home() {
 
             <div className="hero-metrics">
               <div className="hero-metric">
-                <strong>120+</strong>
+                <strong>{allProducts.length || 0}</strong>
                 <span>acc đang lên kệ</span>
               </div>
               <div className="hero-metric">
@@ -139,21 +76,21 @@ export default function Home() {
               <div className="showcase-badge">Acc hot nhất!</div>
 
               <div className="showcase-inner">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <path d="M0,0 L100,100 M100,0 L0,100" stroke="white" strokeWidth="2" />
-                </svg>
+                {featuredHeroProduct?.images[0] ? (
+                  <Image
+                    src={featuredHeroProduct.images[0]}
+                    alt={featuredHeroProduct.title}
+                    fill
+                    className="showcase-photo"
+                    sizes="(max-width: 760px) 320px, 380px"
+                  />
+                ) : (
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0,0 L100,100 M100,0 L0,100" stroke="white" strokeWidth="2" />
+                  </svg>
+                )}
 
-                <div className="showcase-inner-content">
-                  <div className="showcase-icon">
-                    <Gamepad2 size={80} />
-                  </div>
-                  <h3>Glacier X-Suit</h3>
-                  <div className="showcase-stats">
-                    <span>Lv. 76</span>
-                    <span className="stat-hot">89 Skin</span>
-                    <span>Mythic</span>
-                  </div>
-                </div>
+                <div className="showcase-overlay" />
               </div>
             </div>
 
@@ -162,7 +99,7 @@ export default function Home() {
                 <Crown size={28} />
               </div>
               <div>
-                <strong>6.900.000đ</strong>
+                <strong>{featuredHeroProduct?.price ?? "Liên hệ"}</strong>
                 <span>Giá đang lên sàn</span>
               </div>
             </div>
@@ -183,7 +120,7 @@ export default function Home() {
                     <Crosshair size={22} />
                   </div>
                   <h3>Chọn acc nhanh</h3>
-                  <p>Dữ liệu rõ ràng, giá gọn, ảnh đẹp. Lướt một lượt là biết acc nào đáng chốt.</p>
+                  <p>Dữ liệu rõ ràng, giá gọn, ảnh thật. Lướt một lượt là biết acc nào đáng chốt.</p>
                 </div>
               </div>
             </div>
@@ -198,7 +135,7 @@ export default function Home() {
                     <BarChart3 size={22} />
                   </div>
                   <h3>Data rõ ràng</h3>
-                  <p>Skin, level, nâng cấp, rank — tất cả hiện rõ trên mỗi card để bạn so sánh dễ dàng.</p>
+                  <p>Skin, level, nâng cấp, rank và loại acc đều hiện trực tiếp trên card để so sánh nhanh.</p>
                 </div>
               </div>
             </div>
@@ -213,7 +150,7 @@ export default function Home() {
                     <Shield size={22} />
                   </div>
                   <h3>Mua bán an toàn</h3>
-                  <p>Tài khoản được kiểm tra kỹ. Liên kết an toàn, đăng nhập ổn định, hỗ trợ sau mua.</p>
+                  <p>Tài khoản được kiểm tra kỹ, đăng nhập ổn định và có hỗ trợ rõ ràng sau mua.</p>
                 </div>
               </div>
             </div>
@@ -229,23 +166,63 @@ export default function Home() {
         <div className="featured-container">
           <div className="featured-header">
             <h2 className="featured-title">Acc nổi bật tuần này</h2>
-            <p className="featured-subtitle">Sáu tài khoản được tuyển chọn kỹ nhất — sẵn sàng vào trận.</p>
+            <p className="featured-subtitle">Ba tài khoản được chọn thật từ admin, sẵn sàng vào trận.</p>
           </div>
 
-          <div className="featured-cards-grid">
-            {featuredAccounts.map((account, index) => (
-              <article key={account.title} className={`featured-account-card featured-account-card-${(index % 3) + 1}`}>
-                <div className="featured-account-head">
-                  <span className="featured-account-tag">{account.tag}</span>
-                  <span className="featured-account-index">0{index + 1}</span>
+          <div className="featured-cards-grid featured-cards-grid-compact">
+            {weeklyProducts.map((account) => (
+              <article key={account.id} className="product-card">
+                <div className="product-card-media">
+                  <Image
+                    src={account.images[0] ?? "/accounts/acc-01.svg"}
+                    alt={account.title}
+                    fill
+                    sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
+                  />
+                  <span className="product-card-badge">{account.code}</span>
                 </div>
-                <h3>{account.title}</h3>
-                <p>{account.meta}</p>
-                <div className="featured-account-price">{account.price}</div>
-                <Link href="/products" className="featured-account-link">
-                  Xem sản phẩm
-                  <ArrowRight size={16} />
-                </Link>
+
+                <div className="product-card-body">
+                  <div className="gallery-topline">
+                    <span className={`tier-badge ${account.tierClass}`}>{account.tier}</span>
+                    <span className="tag-dark">{account.tag}</span>
+                  </div>
+
+                  <h3>{account.title}</h3>
+                  <p>{account.summary}</p>
+
+                  <div className="product-bullets">
+                    {account.skinXe && (
+                      <span className="product-bullet product-bullet-xe">
+                        <span className="bullet-label">Skin xe</span>
+                        {account.skinXe}
+                      </span>
+                    )}
+                    {account.thanhGiap && (
+                      <span className="product-bullet product-bullet-giap">
+                        <span className="bullet-label">Thánh giáp</span>
+                        {account.thanhGiap}
+                      </span>
+                    )}
+                    {account.doBAPE && (
+                      <span className="product-bullet product-bullet-bape">
+                        <span className="bullet-label">BAPE</span>
+                        {account.doBAPE}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="product-card-bottom">
+                    <strong>{account.price}</strong>
+                    <div className="product-card-actions">
+                      <Link href="/user">Mua ngay</Link>
+                      <Link href={`/products/${account.slug}`}>
+                        Xem chi tiết
+                        <ArrowRight size={15} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               </article>
             ))}
           </div>
@@ -256,24 +233,24 @@ export default function Home() {
         <div className="inventory-container">
           <div className="inventory-header">
             <div className="inventory-eyebrow">Khám phá tất cả acc</div>
-            <h2>Kho loadout đang mở — chọn acc vào trận</h2>
-            <p>Quét nhanh, so sánh dễ. Nhìn một lượt là biết acc nào hợp ngân sách và gu sưu tầm của bạn.</p>
+            <h2>Kho loadout đang mở và chọn acc vào trận</h2>
+            <p>Quét nhanh, so sánh nhanh. Dữ liệu dưới đây lấy trực tiếp từ sản phẩm thật đang có trên cửa hàng.</p>
           </div>
 
           <div className="inventory-list">
-            {inventory.map((item) => (
-              <article key={item.name} className="inventory-row">
+            {inventoryProducts.map((item) => (
+              <article key={item.id} className="inventory-row">
                 <div className="inventory-row-info">
                   <span className={`tier-badge ${item.tierClass}`}>{item.tier}</span>
-                  <h3>{item.name}</h3>
-                  <p>{item.loadout}</p>
+                  <h3>{item.title}</h3>
+                  <p>{item.summary}</p>
                 </div>
                 <div className="inventory-row-price">
                   <strong>{item.price}</strong>
-                  <a href="#">
-                    Giữ acc này
+                  <Link href={`/products/${item.slug}`}>
+                    Xem acc này
                     <ArrowRight size={14} />
-                  </a>
+                  </Link>
                 </div>
               </article>
             ))}

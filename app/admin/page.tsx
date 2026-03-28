@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, PackageCheck, ShoppingBasket, Tags } from "lucide-react";
+import { LayoutDashboard, PackageCheck, ShoppingBasket, Sparkles, Tags } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
 import { getAllProducts } from "@/lib/products-store";
@@ -27,26 +27,14 @@ export default async function AdminPage() {
     { label: "Acc đang bán", value: String(activeProducts.length), icon: PackageCheck },
     { label: "Tổng sản phẩm", value: String(products.length), icon: ShoppingBasket },
     { label: "Loại acc", value: String(accountTypes.length), icon: Tags },
+    { label: "Khu nổi bật", value: "Hero + 3 card", icon: Sparkles },
     { label: "Bố cục", value: "Sidebar", icon: LayoutDashboard },
   ];
 
   return (
     <AdminShell active="overview" sessionName={session.name}>
       <div className="admin-page-stack">
-        <section className="admin-overview-hero">
-          <div>
-            <span className="inventory-eyebrow">Tổng quan</span>
-            <h1>Trung tâm quản trị account PUBG Mobile theo dạng sidebar.</h1>
-            <p>
-              Từ sidebar bên trái, bạn có thể đi sang quản lý account để thêm và sửa sản phẩm,
-              hoặc sang kiểm soát loại acc để tự tạo các nhóm như acc gà, acc xịn hay acc hiếm.
-            </p>
-          </div>
 
-          <Link href="/admin/products" className="dashboard-link">
-            Vào quản lý account
-          </Link>
-        </section>
 
         <section className="dashboard-stats">
           {stats.map(({ label, value, icon: Icon }) => (
@@ -94,6 +82,7 @@ export default async function AdminPage() {
             <div className="dashboard-task-list">
               <Link href="/admin/products">Quản lý account</Link>
               <Link href="/admin/account-types">Kiểm soát loại acc</Link>
+              <Link href="/admin/featured">Quản lý acc nổi bật</Link>
               <Link href="/products">Xem cửa hàng</Link>
             </div>
           </div>

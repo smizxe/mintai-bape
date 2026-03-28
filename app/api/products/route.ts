@@ -62,6 +62,8 @@ export async function POST(req: NextRequest) {
     skinXe,
     thanhGiap,
     doBAPE,
+    isFeaturedHero: false,
+    featuredWeekRank: null,
     images: Array.isArray(body.images) ? body.images : [],
     status: body.status ?? "active",
   });

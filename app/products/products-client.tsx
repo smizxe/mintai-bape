@@ -12,6 +12,8 @@ type FilterState = {
   skins: FilterKey[];
   accountTypes: string[];
   search: string;
+  priceFrom: number | "";
+  priceTo: number | "";
 };
 
 const SKIN_OPTIONS: Array<{ key: FilterKey; label: string }> = [
@@ -24,6 +26,8 @@ const EMPTY_FILTER: FilterState = {
   skins: [],
   accountTypes: [],
   search: "",
+  priceFrom: "",
+  priceTo: "",
 };
 
 export function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
@@ -43,12 +47,10 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
 
     return initialProducts.filter((product) => {
       const matchesSkin =
-        appliedFilters.skins.length === 0 ||
-        appliedFilters.skins.every((key) => Boolean(product[key]));
+        appliedFilters.skins.length === 0 || appliedFilters.skins.every((key) => Boolean(product[key]));
 
       const matchesType =
-        appliedFilters.accountTypes.length === 0 ||
-        appliedFilters.accountTypes.includes(product.tier);
+        appliedFilters.accountTypes.length === 0 || appliedFilters.accountTypes.includes(product.tier);
 
       const matchesSearch =
         !query ||
@@ -61,21 +63,29 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
         product.doBAPE?.toLowerCase().includes(query) ||
         product.shortDescription?.toLowerCase().includes(query);
 
-      return matchesSkin && matchesType && matchesSearch;
+      let matchesPrice = true;
+      if (appliedFilters.priceFrom !== "" && product.priceValue < appliedFilters.priceFrom) {
+        matchesPrice = false;
+      }
+      if (appliedFilters.priceTo !== "" && product.priceValue > appliedFilters.priceTo) {
+        matchesPrice = false;
+      }
+
+      return matchesSkin && matchesType && matchesSearch && matchesPrice;
     });
   }, [appliedFilters, initialProducts]);
 
   const hasAppliedFilters =
     appliedFilters.skins.length > 0 ||
     appliedFilters.accountTypes.length > 0 ||
-    Boolean(appliedFilters.search.trim());
+    Boolean(appliedFilters.search.trim()) ||
+    appliedFilters.priceFrom !== "" ||
+    appliedFilters.priceTo !== "";
 
   function toggleDraftSkin(key: FilterKey) {
     setDraftFilters((prev) => ({
       ...prev,
-      skins: prev.skins.includes(key)
-        ? prev.skins.filter((item) => item !== key)
-        : [...prev.skins, key],
+      skins: prev.skins.includes(key) ? prev.skins.filter((item) => item !== key) : [...prev.skins, key],
     }));
   }
 
@@ -93,6 +103,8 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
       skins: [...draftFilters.skins],
       accountTypes: [...draftFilters.accountTypes],
       search: draftFilters.search,
+      priceFrom: draftFilters.priceFrom,
+      priceTo: draftFilters.priceTo,
     });
   }
 
@@ -138,6 +150,36 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                 {type}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="filter-section">
+          <span className="filter-section-title">Khoảng giá</span>
+          <div className="filter-price-row">
+            <input
+              type="number"
+              className="filter-search-input filter-price-input"
+              placeholder="Từ..."
+              value={draftFilters.priceFrom}
+              onChange={(event) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  priceFrom: event.target.value ? Number(event.target.value) : "",
+                }))
+              }
+            />
+            <input
+              type="number"
+              className="filter-search-input filter-price-input"
+              placeholder="Đến..."
+              value={draftFilters.priceTo}
+              onChange={(event) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  priceTo: event.target.value ? Number(event.target.value) : "",
+                }))
+              }
+            />
           </div>
         </div>
 

@@ -21,6 +21,8 @@ export type Product = {
   badges: Array<{ label: string; className: string }>;
   images: string[];
   status: string;
+  isFeaturedHero: boolean;
+  featuredWeekRank: number | null;
 };
 
 type ProductPayload = Omit<Product, "id" | "stats" | "badges">;
@@ -104,6 +106,8 @@ function mapProduct(record: ProductRecord): Product {
     badges: buildBadgesFromFields(skinXe, thanhGiap, doBAPE, record.tier),
     images: record.images.map((image) => image.imageUrl),
     status: statusToUi(record.status),
+    isFeaturedHero: record.isFeaturedHero ?? false,
+    featuredWeekRank: record.featuredWeekRank ?? null,
   };
 }
 
@@ -167,6 +171,8 @@ export async function createProduct(data: ProductPayload): Promise<Product> {
       skinXe,
       thanhGiap,
       doBAPE,
+      isFeaturedHero: data.isFeaturedHero ?? false,
+      featuredWeekRank: data.featuredWeekRank ?? null,
       status: statusToDb(data.status),
       images: {
         create: (data.images ?? []).map((imageUrl, index) => ({
@@ -228,6 +234,8 @@ export async function updateProduct(id: string, data: Partial<ProductPayload>): 
         skinXe: nextSkinXe,
         thanhGiap: nextThanhGiap,
         doBAPE: nextDoBAPE,
+        isFeaturedHero: data.isFeaturedHero,
+        featuredWeekRank: data.featuredWeekRank,
         status: data.status ? statusToDb(data.status) : undefined,
         images: data.images
           ? {
@@ -248,6 +256,68 @@ export async function updateProduct(id: string, data: Partial<ProductPayload>): 
   });
 
   return mapProduct(product);
+}
+
+export async function getFeaturedHeroProduct(): Promise<Product | null> {
+  const product = await prisma.product.findFirst({
+    where: { isFeaturedHero: true, status: ProductStatus.ACTIVE },
+    orderBy: [{ updatedAt: "desc" }],
+    include: {
+      images: {
+        orderBy: { position: "asc" },
+      },
+    },
+  });
+
+  return product ? mapProduct(product) : null;
+}
+
+export async function getFeaturedWeekProducts(limit = 3): Promise<Product[]> {
+  const products = await prisma.product.findMany({
+    where: {
+      featuredWeekRank: {
+        not: null,
+      },
+      status: ProductStatus.ACTIVE,
+    },
+    orderBy: [{ featuredWeekRank: "asc" }, { updatedAt: "desc" }],
+    take: limit,
+    include: {
+      images: {
+        orderBy: { position: "asc" },
+      },
+    },
+  });
+
+  return products.map(mapProduct);
+}
+
+export async function saveFeaturedProducts(input: {
+  heroProductId: string | null;
+  weekProductIds: string[];
+}): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.product.updateMany({
+      data: {
+        isFeaturedHero: false,
+        featuredWeekRank: null,
+      },
+    });
+
+    if (input.heroProductId) {
+      await tx.product.update({
+        where: { id: input.heroProductId },
+        data: { isFeaturedHero: true },
+      });
+    }
+
+    for (const [index, productId] of input.weekProductIds.entries()) {
+      await tx.product.update({
+        where: { id: productId },
+        data: { featuredWeekRank: index + 1 },
+      });
+    }
+  });
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {

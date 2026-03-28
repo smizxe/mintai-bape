@@ -5,12 +5,13 @@ import {
   ExternalLink,
   LayoutDashboard,
   Package2,
+  Sparkles,
   Tags,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
 
 type AdminShellProps = {
-  active: "overview" | "products" | "account-types";
+  active: "overview" | "products" | "account-types" | "featured";
   sessionName: string;
   children: ReactNode;
 };
@@ -48,6 +49,14 @@ export function AdminShell({ active, sessionName, children }: AdminShellProps) {
           >
             <Tags size={18} />
             <span>Kiểm soát loại acc</span>
+          </Link>
+
+          <Link
+            href="/admin/featured"
+            className={`admin-sidebar-link ${active === "featured" ? "admin-sidebar-link-active" : ""}`}
+          >
+            <Sparkles size={18} />
+            <span>Quản lý acc nổi bật</span>
           </Link>
 
           <Link href="/products" className="admin-sidebar-link">
