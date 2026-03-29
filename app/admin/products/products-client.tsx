@@ -20,10 +20,10 @@ import type { AdminProduct } from "@/lib/products-store";
 import { PAYOS_MAX_AMOUNT } from "@/lib/shop-config";
 
 const STATUSES = [
-  { value: "active", label: "Äang bÃ¡n" },
-  { value: "draft", label: "NhÃ¡p" },
-  { value: "sold", label: "ÄÃ£ bÃ¡n" },
-  { value: "archived", label: "áº¨n" },
+  { value: "active", label: "Đang bán" },
+  { value: "draft", label: "Nháp" },
+  { value: "sold", label: "Đã bán" },
+  { value: "archived", label: "Ẩn" },
 ] as const;
 
 type FormTab = "card" | "detail" | "account";
@@ -66,12 +66,6 @@ const EMPTY_FORM: ProductForm = {
   status: "active",
 };
 
-function formatPriceLabel(value: string) {
-  const numeric = Number(value.replace(/\D/g, "")) || 0;
-  if (!numeric) return "0Ä‘";
-  return `${numeric.toLocaleString("vi-VN")}Ä‘`;
-}
-
 function validateProductCodeInput(value: string) {
   const trimmed = value.trim();
 
@@ -84,6 +78,12 @@ function validateProductCodeInput(value: string) {
   }
 
   return null;
+}
+
+function formatPriceLabel(value: string) {
+  const numeric = Number(value.replace(/\D/g, "")) || 0;
+  if (!numeric) return "0đ";
+  return `${numeric.toLocaleString("vi-VN")}đ`;
 }
 
 function productToForm(product: AdminProduct): ProductForm {
@@ -150,10 +150,10 @@ function ImageUploader({
         if (response.ok && Array.isArray(data.urls)) {
           onChange([...images, ...data.urls]);
         } else {
-          alert(data.error ?? "Upload tháº¥t báº¡i");
+          alert(data.error ?? "Upload thất bại");
         }
       } catch {
-        alert("Lá»—i káº¿t ná»‘i khi upload");
+        alert("Lỗi kết nối khi upload");
       } finally {
         setUploading(false);
       }
@@ -213,13 +213,13 @@ function ImageUploader({
         {uploading ? (
           <div className="af-dropzone-content">
             <Upload size={28} className="af-spin" />
-            <span>Äang upload...</span>
+            <span>Đang upload...</span>
           </div>
         ) : (
           <div className="af-dropzone-content">
             <ImagePlus size={28} />
-            <span>KÃ©o tháº£ áº£nh vÃ o Ä‘Ã¢y hoáº·c click Ä‘á»ƒ chá»n</span>
-            <span className="af-dropzone-hint">PNG, JPG, WebP - tá»‘i Ä‘a 5MB má»—i áº£nh</span>
+            <span>Kéo thả ảnh vào đây hoặc click để chọn</span>
+            <span className="af-dropzone-hint">PNG, JPG, WebP - tối đa 5MB mỗi ảnh</span>
           </div>
         )}
       </div>
@@ -230,7 +230,7 @@ function ImageUploader({
             <div key={`${url}-${index}`} className="af-image-thumb">
               <Image
                 src={url}
-                alt={`áº¢nh ${index + 1}`}
+                alt={`Ảnh ${index + 1}`}
                 width={120}
                 height={120}
                 className="af-thumb-img"
@@ -239,11 +239,11 @@ function ImageUploader({
                 type="button"
                 className="af-thumb-remove"
                 onClick={() => removeImage(index)}
-                title="XÃ³a áº£nh"
+                title="Xóa ảnh"
               >
                 <X size={14} />
               </button>
-              {index === 0 && <span className="af-thumb-main">áº¢nh chÃ­nh</span>}
+              {index === 0 && <span className="af-thumb-main">Ảnh chính</span>}
             </div>
           ))}
         </div>
@@ -335,10 +335,10 @@ export function AdminProductsClient({
     allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.includes(id));
 
   const statusLabel: Record<string, string> = {
-    active: "Äang bÃ¡n",
-    draft: "NhÃ¡p",
-    sold: "ÄÃ£ bÃ¡n",
-    archived: "áº¨n",
+    active: "Đang bán",
+    draft: "Nháp",
+    sold: "Đã bán",
+    archived: "Ẩn",
   };
 
   function setField<Key extends keyof ProductForm>(key: Key, value: ProductForm[Key]) {
@@ -411,7 +411,7 @@ export function AdminProductsClient({
       requiresAccountInfo(form.priceValue) &&
       (!form.accountLoginEmail.trim() || !form.accountLoginPassword.trim())
     ) {
-      setError("Acc dÆ°á»›i 30 triá»‡u cáº§n cÃ³ email vÃ  máº­t kháº©u Ä‘á»ƒ giao tá»± Ä‘á»™ng sau khi khÃ¡ch thanh toÃ¡n.");
+      setError("Acc dưới 30 triệu cần có email và mật khẩu để giao tự động sau khi khách thanh toán.");
       setSaving(false);
       setFormTab("account");
       return;
@@ -439,44 +439,44 @@ export function AdminProductsClient({
 
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? "LÆ°u sáº£n pháº©m tháº¥t báº¡i.");
+        setError(data.error ?? "Lưu sản phẩm thất bại.");
         return;
       }
 
       if (mode === "create") {
         setProducts((prev) => [data, ...prev]);
-        setSuccessMsg("Táº¡o sáº£n pháº©m thÃ nh cÃ´ng.");
+        setSuccessMsg("Tạo sản phẩm thành công.");
       } else {
         setProducts((prev) => prev.map((product) => (product.id === editingId ? data : product)));
-        setSuccessMsg("Cáº­p nháº­t sáº£n pháº©m thÃ nh cÃ´ng.");
+        setSuccessMsg("Cập nhật sản phẩm thành công.");
       }
 
       closeForm();
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch {
-      setError("Lá»—i káº¿t ná»‘i. Thá»­ láº¡i.");
+      setError("Lỗi kết nối. Thử lại.");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm("XÃ³a sáº£n pháº©m nÃ y? KhÃ´ng thá»ƒ hoÃ n tÃ¡c.")) return;
+    if (!window.confirm("Xóa sản phẩm này? Không thể hoàn tác.")) return;
 
     setDeletingId(id);
     try {
       const response = await fetch(`/api/products/${id}`, { method: "DELETE" });
       if (!response.ok) {
-        window.alert("XÃ³a tháº¥t báº¡i. Thá»­ láº¡i.");
+        window.alert("Xóa thất bại. Thử lại.");
         return;
       }
 
       setProducts((prev) => prev.filter((product) => product.id !== id));
       setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
-      setSuccessMsg("ÄÃ£ xÃ³a sáº£n pháº©m.");
+      setSuccessMsg("Đã xóa sản phẩm.");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch {
-      window.alert("Lá»—i káº¿t ná»‘i.");
+      window.alert("Lỗi kết nối.");
     } finally {
       setDeletingId(null);
     }
@@ -484,7 +484,7 @@ export function AdminProductsClient({
 
   async function handleBulkApply() {
     if (bulkAction === "none" || selectedIds.length === 0) return;
-    if (bulkAction === "delete" && !window.confirm(`XÃ³a ${selectedIds.length} sáº£n pháº©m Ä‘Ã£ chá»n?`)) {
+    if (bulkAction === "delete" && !window.confirm(`Xóa ${selectedIds.length} sản phẩm đã chọn?`)) {
       return;
     }
 
@@ -499,11 +499,11 @@ export function AdminProductsClient({
         const failed = results.some((response) => !response.ok);
 
         if (failed) {
-          setError("CÃ³ sáº£n pháº©m chÆ°a xÃ³a Ä‘Æ°á»£c. Thá»­ láº¡i.");
+          setError("Có sản phẩm chưa xóa được. Thử lại.");
         } else {
           setProducts((prev) => prev.filter((product) => !selectedIds.includes(product.id)));
           setSelectedIds([]);
-          setSuccessMsg(`ÄÃ£ xÃ³a ${results.length} sáº£n pháº©m.`);
+          setSuccessMsg(`Đã xóa ${results.length} sản phẩm.`);
         }
       } else {
         const selectedProducts = products.filter((product) => selectedIds.includes(product.id));
@@ -522,13 +522,13 @@ export function AdminProductsClient({
 
         setProducts((prev) => prev.map((product) => updated.find((item) => item.id === product.id) ?? product));
         setSelectedIds([]);
-        setSuccessMsg(`ÄÃ£ cáº­p nháº­t ${updated.length} sáº£n pháº©m.`);
+        setSuccessMsg(`Đã cập nhật ${updated.length} sản phẩm.`);
       }
 
       setBulkAction("none");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch {
-      setError("HÃ nh Ä‘á»™ng hÃ ng loáº¡t tháº¥t báº¡i. Kiá»ƒm tra rá»“i thá»­ láº¡i.");
+      setError("Hành động hàng loạt thất bại. Kiểm tra rồi thử lại.");
     } finally {
       setBulkBusy(false);
     }
@@ -540,16 +540,16 @@ export function AdminProductsClient({
         <div className="admin-products-title">
           <Link href="/admin" className="admin-back-link">
             <ArrowLeft size={16} />
-            Tá»•ng quan
+            Tổng quan
           </Link>
-          <h1>Quáº£n lÃ½ account</h1>
-          <span className="admin-products-count">{products.length} sáº£n pháº©m</span>
+          <h1>Quản lý account</h1>
+          <span className="admin-products-count">{products.length} sản phẩm</span>
         </div>
 
         {mode === "list" && (
           <button type="button" className="admin-btn-primary" onClick={openCreate}>
             <Plus size={16} />
-            ThÃªm sáº£n pháº©m
+            Thêm sản phẩm
           </button>
         )}
       </div>
@@ -559,7 +559,7 @@ export function AdminProductsClient({
       {(mode === "create" || mode === "edit") && (
         <div className="af-panel">
           <div className="af-header">
-            <h2>{mode === "create" ? "ThÃªm sáº£n pháº©m má»›i" : `Chá»‰nh sá»­a: ${form.title || "..."}`}</h2>
+            <h2>{mode === "create" ? "Thêm sản phẩm mới" : `Chỉnh sửa: ${form.title || "..."}`}</h2>
             <button type="button" className="af-close" onClick={closeForm}>
               <X size={20} />
             </button>
@@ -571,21 +571,21 @@ export function AdminProductsClient({
               className={`af-tab ${formTab === "card" ? "af-tab-active" : ""}`}
               onClick={() => setFormTab("card")}
             >
-              ThÃ´ng tin card
+              Thông tin card
             </button>
             <button
               type="button"
               className={`af-tab ${formTab === "detail" ? "af-tab-active" : ""}`}
               onClick={() => setFormTab("detail")}
             >
-              Trang chi tiáº¿t
+              Trang chi tiết
             </button>
             <button
               type="button"
               className={`af-tab ${formTab === "account" ? "af-tab-active" : ""}`}
               onClick={() => setFormTab("account")}
             >
-              ThÃ´ng tin tÃ i khoáº£n
+              Thông tin tài khoản
             </button>
           </div>
 
@@ -608,13 +608,13 @@ export function AdminProductsClient({
                 </label>
 
                 <label className="af-field">
-                  <span>Loáº¡i acc</span>
+                  <span>Loại acc</span>
                   <input
                     list="account-type-options"
                     type="text"
                     value={form.tier}
                     onChange={(event) => setField("tier", event.target.value)}
-                    placeholder="Acc xá»‹n"
+                    placeholder="Acc xịn"
                   />
                   <datalist id="account-type-options">
                     {accountTypeOptions.map((item) => (
@@ -625,7 +625,7 @@ export function AdminProductsClient({
               </div>
 
               <label className="af-field">
-                <span>TÃªn sáº£n pháº©m</span>
+                <span>Tên sản phẩm</span>
                 <input
                   type="text"
                   value={form.title}
@@ -646,7 +646,7 @@ export function AdminProductsClient({
                 </label>
 
                 <label className="af-field">
-                  <span>Tráº¡ng thÃ¡i</span>
+                  <span>Trạng thái</span>
                   <select
                     value={form.status}
                     onChange={(event) => setField("status", event.target.value)}
@@ -661,7 +661,7 @@ export function AdminProductsClient({
               </div>
 
               <label className="af-field">
-                <span>GiÃ¡ bÃ¡n</span>
+                <span>Giá bán</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -669,21 +669,21 @@ export function AdminProductsClient({
                   onChange={(event) => setPriceValue(event.target.value)}
                   placeholder="6900000"
                 />
-                <small className="af-field-hint">Hiá»ƒn thá»‹ ngoÃ i shop: {formatPriceLabel(form.priceValue)}</small>
+                <small className="af-field-hint">Hiển thị ngoài shop: {formatPriceLabel(form.priceValue)}</small>
               </label>
 
               <label className="af-field">
-                <span>MÃ´ táº£ card</span>
+                <span>Mô tả card</span>
                 <textarea
                   value={form.summary}
                   onChange={(event) => setField("summary", event.target.value)}
                   rows={2}
-                  placeholder="MÃ´ táº£ ngáº¯n gá»n hiá»ƒn thá»‹ trÃªn card sáº£n pháº©m..."
+                  placeholder="Mô tả ngắn gọn hiển thị trên card sản phẩm..."
                 />
               </label>
 
               <div className="af-divider" />
-              <p className="af-section-label">3 Ä‘iá»ƒm ná»•i báº­t</p>
+              <p className="af-section-label">3 điểm nổi bật</p>
 
               <label className="af-field af-bullet af-bullet-xe">
                 <span>Skin xe</span>
@@ -696,17 +696,17 @@ export function AdminProductsClient({
               </label>
 
               <label className="af-field af-bullet af-bullet-giap">
-                <span>ThÃ¡nh giÃ¡p</span>
+                <span>Thánh giáp</span>
                 <input
                   type="text"
                   value={form.thanhGiap}
                   onChange={(event) => setField("thanhGiap", event.target.value)}
-                  placeholder="ThÃ¡nh giÃ¡p mÃ¹a 16"
+                  placeholder="Thánh giáp mùa 16"
                 />
               </label>
 
               <label className="af-field af-bullet af-bullet-bape">
-                <span>Äá»“ BAPE</span>
+                <span>Đồ BAPE</span>
                 <input
                   type="text"
                   value={form.doBAPE}
@@ -720,17 +720,17 @@ export function AdminProductsClient({
           {formTab === "detail" && (
             <div className="af-body">
               <label className="af-field">
-                <span>MÃ´ táº£ ngáº¯n</span>
+                <span>Mô tả ngắn</span>
                 <textarea
                   value={form.shortDescription}
                   onChange={(event) => setField("shortDescription", event.target.value)}
                   rows={3}
-                  placeholder="Äoáº¡n mÃ´ táº£ ngáº¯n hiá»ƒn thá»‹ á»Ÿ Ä‘áº§u trang chi tiáº¿t..."
+                  placeholder="Đoạn mô tả ngắn hiển thị ở đầu trang chi tiết..."
                 />
               </label>
 
               <div className="af-field">
-                <span className="af-field-label">MÃ´ táº£ Ä‘áº§y Ä‘á»§</span>
+                <span className="af-field-label">Mô tả đầy đủ</span>
                 <div className="af-quill-wrap">
                   <RichTextEditor
                     value={form.descriptionHtml}
@@ -742,7 +742,7 @@ export function AdminProductsClient({
               <div className="af-divider" />
 
               <div className="af-field">
-                <span className="af-field-label">áº¢nh sáº£n pháº©m</span>
+                <span className="af-field-label">Ảnh sản phẩm</span>
                 <ImageUploader images={form.images} onChange={(urls) => setField("images", urls)} />
               </div>
             </div>
@@ -751,16 +751,16 @@ export function AdminProductsClient({
           {formTab === "account" && (
             <div className="af-body">
               <div className="af-field af-note-block">
-                <span className="af-field-label">ThÃ´ng tin Ä‘Äƒng nháº­p giao cho khÃ¡ch</span>
+                <span className="af-field-label">Thông tin đăng nhập giao cho khách</span>
                 <small className="af-field-hint">
                   {requiresAccountInfo(form.priceValue)
-                    ? "Acc dÆ°á»›i 30 triá»‡u báº¯t buá»™c cÃ³ email vÃ  máº­t kháº©u Ä‘á»ƒ há»‡ thá»‘ng gá»­i tá»± Ä‘á»™ng sau khi thanh toÃ¡n."
-                    : "Acc trÃªn 30 triá»‡u cÃ³ thá»ƒ Ä‘á»ƒ trá»‘ng vÃ¬ khÃ¡ch sáº½ Ä‘Æ°á»£c chuyá»ƒn sang Zalo Ä‘á»ƒ chá»‘t trá»±c tiáº¿p."}
+                    ? "Acc dưới 30 triệu bắt buộc có email và mật khẩu để hệ thống gửi tự động sau khi thanh toán."
+                    : "Acc trên 30 triệu có thể để trống vì khách sẽ được chuyển sang Zalo để chốt trực tiếp."}
                 </small>
               </div>
 
               <label className="af-field">
-                <span>Email tÃ i khoáº£n</span>
+                <span>Email tài khoản</span>
                 <input
                   type="text"
                   value={form.accountLoginEmail}
@@ -770,12 +770,12 @@ export function AdminProductsClient({
               </label>
 
               <label className="af-field">
-                <span>Máº­t kháº©u tÃ i khoáº£n</span>
+                <span>Mật khẩu tài khoản</span>
                 <input
                   type="text"
                   value={form.accountLoginPassword}
                   onChange={(event) => setField("accountLoginPassword", event.target.value)}
-                  placeholder="Nháº­p máº­t kháº©u bÃ n giao cho khÃ¡ch"
+                  placeholder="Nhập mật khẩu bàn giao cho khách"
                 />
               </label>
             </div>
@@ -785,11 +785,11 @@ export function AdminProductsClient({
 
           <div className="af-footer">
             <button type="button" className="af-btn-ghost" onClick={closeForm}>
-              Há»§y
+              Hủy
             </button>
             <button type="button" className="admin-btn-primary" onClick={handleSave} disabled={saving}>
               <Check size={16} />
-              {saving ? "Äang lÆ°u..." : mode === "create" ? "Táº¡o sáº£n pháº©m" : "LÆ°u thay Ä‘á»•i"}
+              {saving ? "Đang lưu..." : mode === "create" ? "Tạo sản phẩm" : "Lưu thay đổi"}
             </button>
           </div>
         </div>
@@ -802,13 +802,13 @@ export function AdminProductsClient({
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="TÃ¬m theo tÃªn, mÃ£, loáº¡i acc hoáº·c Ä‘iá»ƒm ná»•i báº­t..."
+            placeholder="Tìm theo tên, mã, loại acc hoặc điểm nổi bật..."
           />
         </div>
 
         <div className="admin-filter-group">
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            <option value="all">Táº¥t cáº£ tráº¡ng thÃ¡i</option>
+            <option value="all">Tất cả trạng thái</option>
             {STATUSES.map((status) => (
               <option key={status.value} value={status.value}>
                 {status.label}
@@ -817,7 +817,7 @@ export function AdminProductsClient({
           </select>
 
           <select value={tierFilter} onChange={(event) => setTierFilter(event.target.value)}>
-            <option value="all">Táº¥t cáº£ loáº¡i acc</option>
+            <option value="all">Tất cả loại acc</option>
             {accountTypeOptions.map((item) => (
               <option key={item.id} value={item.name}>
                 {item.name}
@@ -827,14 +827,14 @@ export function AdminProductsClient({
         </div>
 
         <div className="admin-bulk-bar">
-          <span>{selectedIds.length} má»¥c Ä‘Ã£ chá»n</span>
+          <span>{selectedIds.length} mục đã chọn</span>
           <select value={bulkAction} onChange={(event) => setBulkAction(event.target.value)}>
-            <option value="none">HÃ nh Ä‘á»™ng hÃ ng loáº¡t</option>
-            <option value="active">Chuyá»ƒn sang Äang bÃ¡n</option>
-            <option value="draft">Chuyá»ƒn sang NhÃ¡p</option>
-            <option value="sold">ÄÃ¡nh dáº¥u ÄÃ£ bÃ¡n</option>
-            <option value="archived">áº¨n sáº£n pháº©m</option>
-            <option value="delete">XÃ³a sáº£n pháº©m</option>
+            <option value="none">Hành động hàng loạt</option>
+            <option value="active">Chuyển sang Đang bán</option>
+            <option value="draft">Chuyển sang Nháp</option>
+            <option value="sold">Đánh dấu Đã bán</option>
+            <option value="archived">Ẩn sản phẩm</option>
+            <option value="delete">Xóa sản phẩm</option>
           </select>
 
           <button
@@ -843,13 +843,13 @@ export function AdminProductsClient({
             disabled={selectedIds.length === 0 || bulkAction === "none" || bulkBusy}
             onClick={handleBulkApply}
           >
-            {bulkBusy ? "Äang Ã¡p dá»¥ng..." : "Ãp dá»¥ng"}
+            {bulkBusy ? "Đang áp dụng..." : "Áp dụng"}
           </button>
         </div>
       </div>
 
       <div className="admin-list-summary">
-        <span>Hiá»ƒn thá»‹ {filteredProducts.length} sáº£n pháº©m</span>
+        <span>Hiển thị {filteredProducts.length} sản phẩm</span>
         {(searchTerm || statusFilter !== "all" || tierFilter !== "all") && (
           <button
             type="button"
@@ -860,7 +860,7 @@ export function AdminProductsClient({
               setTierFilter("all");
             }}
           >
-            XÃ³a bá»™ lá»c
+            Xóa bộ lọc
           </button>
         )}
       </div>
@@ -872,16 +872,16 @@ export function AdminProductsClient({
           <label className="admin-checkbox-cell">
             <input type="checkbox" checked={allVisibleSelected} onChange={toggleSelectAllVisible} />
           </label>
-          <span>HÃ nh Ä‘á»™ng</span>
-          <span>MÃ£ / TÃªn</span>
-          <span>Loáº¡i acc</span>
-          <span>3 Ä‘iá»ƒm ná»•i báº­t</span>
-          <span>GiÃ¡</span>
-          <span>Tráº¡ng thÃ¡i</span>
+          <span>Hành động</span>
+          <span>Mã / Tên</span>
+          <span>Loại acc</span>
+          <span>3 điểm nổi bật</span>
+          <span>Giá</span>
+          <span>Trạng thái</span>
         </div>
 
         {filteredProducts.length === 0 ? (
-          <div className="admin-empty-state">KhÃ´ng cÃ³ sáº£n pháº©m nÃ o khá»›p vá»›i bá»™ lá»c hiá»‡n táº¡i.</div>
+          <div className="admin-empty-state">Không có sản phẩm nào khớp với bộ lọc hiện tại.</div>
         ) : (
           filteredProducts.map((product) => (
             <div key={product.id} className="admin-table-row admin-table-row-extended">
@@ -941,5 +941,3 @@ export function AdminProductsClient({
     </div>
   );
 }
-
-

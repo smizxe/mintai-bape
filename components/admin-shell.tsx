@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -23,7 +23,7 @@ export function AdminShell({ active, sessionName, children }: AdminShellProps) {
         <div className="admin-sidebar-brand">
           <span className="admin-sidebar-kicker">MinTai Bape</span>
           <strong>Admin dashboard</strong>
-          <p>Quan ly tong quan, account va loai acc tu mot sidebar co dinh.</p>
+          <p>Quản lý tổng quan, account và loại acc từ một sidebar cố định.</p>
         </div>
 
         <nav className="admin-sidebar-nav">
