@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllProducts, createProduct, formatPriceLabel, tierToClass } from "@/lib/products-store";
+import {
+  createProduct,
+  formatPriceLabel,
+  getAllProducts,
+  tierToClass,
+  validateProductCredentials,
+} from "@/lib/products-store";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
 import { resolveAccountTypeClass } from "@/lib/account-types-store";
 
@@ -9,24 +15,22 @@ export async function GET(req: NextRequest) {
   const filter = searchParams.get("filter") ?? "";
 
   let products = await getAllProducts();
+  products = products.filter((product) => !product.status || product.status === "active");
 
-  // Only show active products to public
-  products = products.filter((p) => !p.status || p.status === "active");
-
-  if (filter === "skinXe") products = products.filter((p) => p.skinXe);
-  if (filter === "thanhGiap") products = products.filter((p) => p.thanhGiap);
-  if (filter === "doBAPE") products = products.filter((p) => p.doBAPE);
+  if (filter === "skinXe") products = products.filter((product) => product.skinXe);
+  if (filter === "thanhGiap") products = products.filter((product) => product.thanhGiap);
+  if (filter === "doBAPE") products = products.filter((product) => product.doBAPE);
 
   if (search) {
     products = products.filter(
-      (p) =>
-        p.title.toLowerCase().includes(search) ||
-        p.summary.toLowerCase().includes(search) ||
-        p.shortDescription.toLowerCase().includes(search) ||
-        p.skinXe?.toLowerCase().includes(search) ||
-        p.thanhGiap?.toLowerCase().includes(search) ||
-        p.doBAPE?.toLowerCase().includes(search) ||
-        p.code.toLowerCase().includes(search),
+      (product) =>
+        product.title.toLowerCase().includes(search) ||
+        product.summary.toLowerCase().includes(search) ||
+        product.shortDescription.toLowerCase().includes(search) ||
+        product.skinXe?.toLowerCase().includes(search) ||
+        product.thanhGiap?.toLowerCase().includes(search) ||
+        product.doBAPE?.toLowerCase().includes(search) ||
+        product.code.toLowerCase().includes(search),
     );
   }
 
@@ -42,9 +46,25 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-
-  const { skinXe = "", thanhGiap = "", doBAPE = "", tier = "Acc gà" } = body;
+  const skinXe = body.skinXe ?? "";
+  const thanhGiap = body.thanhGiap ?? "";
+  const doBAPE = body.doBAPE ?? "";
+  const tier = body.tier ?? "Acc gà";
   const priceValue = Number(body.priceValue) || 0;
+  const accountLoginEmail = typeof body.accountLoginEmail === "string" ? body.accountLoginEmail.trim() : "";
+  const accountLoginPassword =
+    typeof body.accountLoginPassword === "string" ? body.accountLoginPassword.trim() : "";
+
+  const credentialError = validateProductCredentials({
+    priceValue,
+    accountLoginEmail,
+    accountLoginPassword,
+  });
+
+  if (credentialError) {
+    return NextResponse.json({ error: credentialError }, { status: 400 });
+  }
+
   const tierClass = await resolveAccountTypeClass(tier);
 
   const product = await createProduct({
@@ -62,6 +82,8 @@ export async function POST(req: NextRequest) {
     skinXe,
     thanhGiap,
     doBAPE,
+    accountLoginEmail,
+    accountLoginPassword,
     isFeaturedHero: false,
     featuredWeekRank: null,
     images: Array.isArray(body.images) ? body.images : [],

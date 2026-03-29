@@ -1872,7 +1872,7 @@ input {
 .product-lightbox-inner {
   position: relative;
   z-index: 1;
-  width: min(calc(100vw - 32px), 1200px);
+  width: min(calc(100vw - 32px), 1380px);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 16px;
@@ -1882,7 +1882,7 @@ input {
 .product-lightbox-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  height: min(84vh, 920px);
   background: #111;
   border: 3px solid #fff;
   box-shadow: 10px 10px 0 #000;
@@ -2950,6 +2950,7 @@ input {
   .product-lightbox-inner {
     width: min(calc(100vw - 20px), 900px);
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .product-lightbox-nav {
@@ -2965,6 +2966,10 @@ input {
 
   .product-lightbox-next {
     right: 8px;
+  }
+
+  .product-lightbox-stage {
+    height: min(78vh, 760px);
   }
 
   .inventory-row,

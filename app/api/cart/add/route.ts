@@ -20,6 +20,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Không tìm thấy tài khoản." }, { status: 404 });
   }
 
-  const cart = await addProductToCart(user.id, String(body.productId));
-  return NextResponse.json({ ok: true, cart });
+  try {
+    const cart = await addProductToCart(user.id, String(body.productId));
+    return NextResponse.json({ ok: true, cart });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Chưa thể thêm acc vào giỏ hàng." },
+      { status: 400 },
+    );
+  }
 }

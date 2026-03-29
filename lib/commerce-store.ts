@@ -1,3 +1,4 @@
+import { ProductStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPriceLabel } from "@/lib/products-store";
 import { hashPassword, verifyPassword } from "@/lib/session";
@@ -12,6 +13,8 @@ export type CartItemView = {
   priceValue: number;
   lineTotalLabel: string;
   lineTotalValue: number;
+  accountLoginEmail: string;
+  accountLoginPassword: string;
 };
 
 export type CartView = {
@@ -45,6 +48,22 @@ export type OrderDetail = OrderSummary & {
   }>;
 };
 
+export type DeliverableOrder = {
+  id: string;
+  totalLabel: string;
+  customerEmail: string;
+  customerName: string;
+  deliveryEmailLockedAt: string | null;
+  deliveryEmailSentAt: string | null;
+  items: Array<{
+    id: string;
+    title: string;
+    quantity: number;
+    accountLoginEmail: string | null;
+    accountLoginPassword: string | null;
+  }>;
+};
+
 export type UserProfileView = {
   id: string;
   email: string;
@@ -57,11 +76,12 @@ type CartWithProducts = Awaited<ReturnType<typeof getOrCreateCart>>;
 function mapCart(cart: CartWithProducts): CartView {
   const items = cart.items.map((item) => {
     const priceValue = item.product.priceValue;
-    const lineTotalValue = priceValue * item.quantity;
+    const quantity = 1;
+    const lineTotalValue = priceValue;
 
     return {
       id: item.id,
-      quantity: item.quantity,
+      quantity,
       title: item.product.title,
       slug: item.product.slug,
       imageUrl: item.product.images[0]?.imageUrl ?? "/accounts/acc-01.svg",
@@ -69,6 +89,8 @@ function mapCart(cart: CartWithProducts): CartView {
       priceValue,
       lineTotalLabel: formatPriceLabel(lineTotalValue),
       lineTotalValue,
+      accountLoginEmail: item.product.accountLoginEmail ?? "",
+      accountLoginPassword: item.product.accountLoginPassword ?? "",
     };
   });
 
@@ -76,7 +98,7 @@ function mapCart(cart: CartWithProducts): CartView {
 
   return {
     id: cart.id,
-    itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+    itemCount: items.length,
     subtotalLabel: formatPriceLabel(subtotalValue),
     subtotalValue,
     items,
@@ -99,7 +121,7 @@ function mapOrderSummary(order: {
     totalLabel: order.totalLabel,
     totalValue: order.totalValue,
     status: order.status,
-    itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    itemCount: order.items.length,
     checkoutUrl: order.checkoutUrl,
     paymentOrderCode: order.paymentOrderCode,
   };
@@ -125,9 +147,7 @@ async function getOrCreateCart(userId: string) {
     },
   });
 
-  if (existing) {
-    return existing;
-  }
+  if (existing) return existing;
 
   return prisma.cart.create({
     data: { userId },
@@ -205,6 +225,14 @@ export async function getCartByUserId(userId: string): Promise<CartView> {
 
 export async function addProductToCart(userId: string, productId: string) {
   const cart = await getOrCreateCart(userId);
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true, status: true },
+  });
+
+  if (!product || product.status !== ProductStatus.ACTIVE) {
+    throw new Error("Acc này hiện không còn khả dụng.");
+  }
 
   await prisma.cartItem.upsert({
     where: {
@@ -214,9 +242,7 @@ export async function addProductToCart(userId: string, productId: string) {
       },
     },
     update: {
-      quantity: {
-        increment: 1,
-      },
+      quantity: 1,
     },
     create: {
       cartId: cart.id,
@@ -252,7 +278,12 @@ export async function createPendingOrderFromCart(input: {
     return null;
   }
 
-  const totalValue = cart.items.reduce((sum, item) => sum + item.product.priceValue * item.quantity, 0);
+  const hasUnavailableProduct = cart.items.some((item) => item.product.status !== ProductStatus.ACTIVE);
+  if (hasUnavailableProduct) {
+    throw new Error("Có acc trong giỏ hàng không còn khả dụng. Vui lòng kiểm tra lại trước khi thanh toán.");
+  }
+
+  const totalValue = cart.items.reduce((sum, item) => sum + item.product.priceValue, 0);
   const totalLabel = formatPriceLabel(totalValue);
 
   const order = await prisma.order.create({
@@ -273,7 +304,9 @@ export async function createPendingOrderFromCart(input: {
           imageUrl: item.product.images[0]?.imageUrl ?? null,
           priceLabel: item.product.price,
           priceValue: item.product.priceValue,
-          quantity: item.quantity,
+          accountLoginEmail: item.product.accountLoginEmail || null,
+          accountLoginPassword: item.product.accountLoginPassword || null,
+          quantity: 1,
         })),
       },
     },
@@ -290,15 +323,15 @@ export async function createPendingOrderFromCart(input: {
     totalLabel: order.totalLabel,
     totalValue: order.totalValue,
     status: order.status,
-    itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    itemCount: order.items.length,
     items: order.items.map((item) => ({
       id: item.id,
       title: item.title,
       productSlug: item.productSlug,
       imageUrl: item.imageUrl,
       priceLabel: item.priceLabel,
-      quantity: item.quantity,
-      lineTotalLabel: formatPriceLabel(item.priceValue * item.quantity),
+      quantity: 1,
+      lineTotalLabel: formatPriceLabel(item.priceValue),
     })),
   };
 }
@@ -340,13 +373,8 @@ export async function markOrderPaidByPaymentCode(paymentOrderCode: string) {
     },
   });
 
-  if (!order) {
-    return null;
-  }
-
-  if (order.status === "paid") {
-    return order.id;
-  }
+  if (!order) return null;
+  if (order.status === "paid") return order.id;
 
   await prisma.$transaction(async (tx) => {
     await tx.order.update({
@@ -357,11 +385,22 @@ export async function markOrderPaidByPaymentCode(paymentOrderCode: string) {
       },
     });
 
-    const latestCart = order.user.carts[0];
-    if (!latestCart) return;
-
     const productIds = order.items.map((item) => item.productId).filter(Boolean) as string[];
-    if (productIds.length === 0) return;
+    if (productIds.length > 0) {
+      await tx.product.updateMany({
+        where: {
+          id: { in: productIds },
+        },
+        data: {
+          status: ProductStatus.SOLD,
+          isFeaturedHero: false,
+          featuredWeekRank: null,
+        },
+      });
+    }
+
+    const latestCart = order.user.carts[0];
+    if (!latestCart || productIds.length === 0) return;
 
     await tx.cartItem.deleteMany({
       where: {
@@ -392,6 +431,70 @@ export async function markOrderCancelledByPaymentCode(paymentOrderCode: string) 
   return order.id;
 }
 
+export async function getDeliverableOrderByPaymentCode(paymentOrderCode: string): Promise<DeliverableOrder | null> {
+  const order = await prisma.order.findUnique({
+    where: { paymentOrderCode },
+    include: {
+      user: true,
+      items: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  if (!order) return null;
+
+  return {
+    id: order.id,
+    totalLabel: order.totalLabel,
+    customerEmail: order.user.email,
+    customerName: order.user.displayName || order.user.email.split("@")[0],
+    deliveryEmailLockedAt: order.deliveryEmailLockedAt ? order.deliveryEmailLockedAt.toISOString() : null,
+    deliveryEmailSentAt: order.deliveryEmailSentAt ? order.deliveryEmailSentAt.toISOString() : null,
+    items: order.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      quantity: item.quantity,
+      accountLoginEmail: item.accountLoginEmail ?? null,
+      accountLoginPassword: item.accountLoginPassword ?? null,
+    })),
+  };
+}
+
+export async function lockOrderDeliveryEmail(orderId: string) {
+  const result = await prisma.order.updateMany({
+    where: {
+      id: orderId,
+      deliveryEmailSentAt: null,
+      deliveryEmailLockedAt: null,
+    },
+    data: {
+      deliveryEmailLockedAt: new Date(),
+    },
+  });
+
+  return result.count > 0;
+}
+
+export async function markOrderDeliveryEmailSent(orderId: string) {
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      deliveryEmailLockedAt: null,
+      deliveryEmailSentAt: new Date(),
+    },
+  });
+}
+
+export async function releaseOrderDeliveryEmailLock(orderId: string) {
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      deliveryEmailLockedAt: null,
+    },
+  });
+}
+
 export async function getOrderByPaymentCode(paymentOrderCode: string): Promise<OrderDetail | null> {
   const order = await prisma.order.findUnique({
     where: { paymentOrderCode },
@@ -412,8 +515,8 @@ export async function getOrderByPaymentCode(paymentOrderCode: string): Promise<O
       productSlug: item.productSlug,
       imageUrl: item.imageUrl,
       priceLabel: item.priceLabel,
-      quantity: item.quantity,
-      lineTotalLabel: formatPriceLabel(item.priceValue * item.quantity),
+      quantity: 1,
+      lineTotalLabel: formatPriceLabel(item.priceValue),
     })),
   };
 }
@@ -453,8 +556,8 @@ export async function getOrderDetailByUserId(userId: string, orderId: string): P
       productSlug: item.productSlug,
       imageUrl: item.imageUrl,
       priceLabel: item.priceLabel,
-      quantity: item.quantity,
-      lineTotalLabel: formatPriceLabel(item.priceValue * item.quantity),
+      quantity: 1,
+      lineTotalLabel: formatPriceLabel(item.priceValue),
     })),
   };
 }

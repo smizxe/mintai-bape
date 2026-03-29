@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
-import { getAllProducts } from "@/lib/products-store";
+import { getAllProductsForAdmin } from "@/lib/products-store";
 import { getAllAccountTypes } from "@/lib/account-types-store";
 import { AdminProductsClient } from "./products-client";
 import { AdminShell } from "@/components/admin-shell";
@@ -16,7 +16,7 @@ export default async function AdminProductsPage() {
   }
 
   const [products, accountTypes] = await Promise.all([
-    getAllProducts(),
+    getAllProductsForAdmin(),
     getAllAccountTypes(),
   ]);
 

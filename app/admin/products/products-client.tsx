@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import type { AccountType } from "@/lib/account-types-store";
-import type { Product } from "@/lib/products-store";
+import type { AdminProduct } from "@/lib/products-store";
+import { PAYOS_MAX_AMOUNT } from "@/lib/shop-config";
 
 const STATUSES = [
   { value: "active", label: "Đang bán" },
@@ -25,7 +26,7 @@ const STATUSES = [
   { value: "archived", label: "Ẩn" },
 ] as const;
 
-type FormTab = "card" | "detail";
+type FormTab = "card" | "detail" | "account";
 
 type ProductForm = {
   code: string;
@@ -37,6 +38,8 @@ type ProductForm = {
   skinXe: string;
   thanhGiap: string;
   doBAPE: string;
+  accountLoginEmail: string;
+  accountLoginPassword: string;
   summary: string;
   shortDescription: string;
   descriptionHtml: string;
@@ -54,6 +57,8 @@ const EMPTY_FORM: ProductForm = {
   skinXe: "",
   thanhGiap: "",
   doBAPE: "",
+  accountLoginEmail: "",
+  accountLoginPassword: "",
   summary: "",
   shortDescription: "",
   descriptionHtml: "",
@@ -79,7 +84,7 @@ function formatPriceLabel(value: string) {
   return `${numeric.toLocaleString("vi-VN")}đ`;
 }
 
-function productToForm(product: Product): ProductForm {
+function productToForm(product: AdminProduct): ProductForm {
   return {
     code: product.code,
     title: product.title,
@@ -90,6 +95,8 @@ function productToForm(product: Product): ProductForm {
     skinXe: product.skinXe ?? "",
     thanhGiap: product.thanhGiap ?? "",
     doBAPE: product.doBAPE ?? "",
+    accountLoginEmail: product.accountLoginEmail ?? "",
+    accountLoginPassword: product.accountLoginPassword ?? "",
     summary: product.summary,
     shortDescription: product.shortDescription,
     descriptionHtml: product.descriptionHtml,
@@ -107,6 +114,11 @@ function tierBadgeColor(className?: string) {
   };
 
   return map[className || "tier-starter"] || "#7dd35c";
+}
+
+function requiresAccountInfo(priceValue: string) {
+  const numeric = Number(priceValue.replace(/\D/g, "")) || 0;
+  return numeric > 0 && numeric <= PAYOS_MAX_AMOUNT;
 }
 
 function ImageUploader({
@@ -242,10 +254,10 @@ export function AdminProductsClient({
   initialProducts,
   initialAccountTypes,
 }: {
-  initialProducts: Product[];
+  initialProducts: AdminProduct[];
   initialAccountTypes: AccountType[];
 }) {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<AdminProduct[]>(initialProducts);
   const [mode, setMode] = useState<"list" | "create" | "edit">("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formTab, setFormTab] = useState<FormTab>("card");
@@ -346,7 +358,7 @@ export function AdminProductsClient({
     setError("");
   }
 
-  function openEdit(product: Product) {
+  function openEdit(product: AdminProduct) {
     setForm(productToForm(product));
     setEditingId(product.id);
     setFormTab("card");
@@ -383,6 +395,16 @@ export function AdminProductsClient({
     if (!form.code.trim() || !form.title.trim() || !form.slug.trim()) {
       setError("Bạn cần nhập mã acc, tên sản phẩm và slug.");
       setSaving(false);
+      return;
+    }
+
+    if (
+      requiresAccountInfo(form.priceValue) &&
+      (!form.accountLoginEmail.trim() || !form.accountLoginPassword.trim())
+    ) {
+      setError("Acc dưới 30 triệu cần có email và mật khẩu để giao tự động sau khi khách thanh toán.");
+      setSaving(false);
+      setFormTab("account");
       return;
     }
 
@@ -485,7 +507,7 @@ export function AdminProductsClient({
             });
 
             if (!response.ok) throw new Error("bulk-update-failed");
-            return (await response.json()) as Product;
+            return (await response.json()) as AdminProduct;
           }),
         );
 
@@ -548,6 +570,13 @@ export function AdminProductsClient({
               onClick={() => setFormTab("detail")}
             >
               Trang chi tiết
+            </button>
+            <button
+              type="button"
+              className={`af-tab ${formTab === "account" ? "af-tab-active" : ""}`}
+              onClick={() => setFormTab("account")}
+            >
+              Thông tin tài khoản
             </button>
           </div>
 
@@ -722,6 +751,39 @@ export function AdminProductsClient({
                 <span className="af-field-label">Ảnh sản phẩm</span>
                 <ImageUploader images={form.images} onChange={(urls) => setField("images", urls)} />
               </div>
+            </div>
+          )}
+
+          {formTab === "account" && (
+            <div className="af-body">
+              <div className="af-field af-note-block">
+                <span className="af-field-label">Thông tin đăng nhập giao cho khách</span>
+                <small className="af-field-hint">
+                  {requiresAccountInfo(form.priceValue)
+                    ? "Acc dưới 30 triệu bắt buộc có email và mật khẩu để hệ thống gửi tự động sau khi thanh toán."
+                    : "Acc trên 30 triệu có thể để trống vì khách sẽ được chuyển sang Zalo để chốt trực tiếp."}
+                </small>
+              </div>
+
+              <label className="af-field">
+                <span>Email tài khoản</span>
+                <input
+                  type="text"
+                  value={form.accountLoginEmail}
+                  onChange={(event) => setField("accountLoginEmail", event.target.value)}
+                  placeholder="accpubg@example.com"
+                />
+              </label>
+
+              <label className="af-field">
+                <span>Mật khẩu tài khoản</span>
+                <input
+                  type="text"
+                  value={form.accountLoginPassword}
+                  onChange={(event) => setField("accountLoginPassword", event.target.value)}
+                  placeholder="Nhập mật khẩu bàn giao cho khách"
+                />
+              </label>
             </div>
           )}
 

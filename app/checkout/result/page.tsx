@@ -6,6 +6,7 @@ import {
   markOrderCancelledByPaymentCode,
   markOrderPaidByPaymentCode,
 } from "@/lib/commerce-store";
+import { sendOrderDeliveryEmailByPaymentCode } from "@/lib/order-delivery";
 import { getOrderStatusLabel } from "@/lib/order-status";
 
 export default async function CheckoutResultPage({
@@ -21,6 +22,11 @@ export default async function CheckoutResultPage({
   if (orderCode) {
     if (status === "PAID") {
       await markOrderPaidByPaymentCode(orderCode);
+      try {
+        await sendOrderDeliveryEmailByPaymentCode(orderCode);
+      } catch (error) {
+        console.error("Failed to send delivery email", error);
+      }
     } else if (cancel === "true" || status === "CANCELLED") {
       await markOrderCancelledByPaymentCode(orderCode);
     }
@@ -38,28 +44,36 @@ export default async function CheckoutResultPage({
         <section className="order-detail-shell">
           <section className="dashboard-table-card order-detail-card">
             <div className="dashboard-card-head">
-              <h1>{isPaid ? "Thanh toán thành công" : isCancelled ? "Đơn hàng đã hủy" : "Đang chờ xác nhận"}</h1>
+              <h1>
+                {isPaid
+                  ? "Thanh toán thành công"
+                  : isCancelled
+                    ? "Đơn hàng đã hủy"
+                    : "Đang chờ xác nhận"}
+              </h1>
               <span>
                 {isPaid
-                  ? "PayOS đã ghi nhận thanh toán của bạn."
+                  ? "Shop đã ghi nhận thanh toán và gửi thông tin acc về email của bạn."
                   : isCancelled
-                    ? "Bạn có thể quay lại giỏ hàng để chọn lại acc phù hợp."
-                    : "Hệ thống đang đồng bộ trạng thái thanh toán của đơn hàng."}
+                    ? "Bạn có thể quay lại giỏ hàng để chọn acc phù hợp hơn."
+                    : "Thanh toán của bạn đang được kiểm tra. Vui lòng chờ trong giây lát."}
               </span>
             </div>
 
             {order ? (
               <div className="order-detail-topline">
-              <div>
-                <strong>{order.totalLabel}</strong>
-                <span>{order.itemCount} sản phẩm</span>
+                <div>
+                  <strong>{order.totalLabel}</strong>
+                  <span>{order.itemCount} sản phẩm</span>
+                </div>
+                <span className="admin-status order-status">{getOrderStatusLabel(order.status)}</span>
               </div>
-              <span className="admin-status order-status">{getOrderStatusLabel(order.status)}</span>
-            </div>
             ) : null}
 
             <div className="dashboard-task-list">
-              <Link href={isPaid ? "/user" : "/cart"}>{isPaid ? "Xem lịch sử mua hàng" : "Quay lại giỏ hàng"}</Link>
+              <Link href={isPaid ? "/user" : "/cart"}>
+                {isPaid ? "Xem lịch sử mua hàng" : "Quay lại giỏ hàng"}
+              </Link>
               <Link href="/products">Xem thêm acc</Link>
             </div>
           </section>

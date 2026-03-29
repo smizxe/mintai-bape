@@ -1,7 +1,8 @@
 import { Prisma, ProductStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { PAYOS_MAX_AMOUNT } from "@/lib/shop-config";
 
-export type Product = {
+type ProductBase = {
   id: string;
   code: string;
   slug: string;
@@ -26,7 +27,14 @@ export type Product = {
   createdAt: string;
 };
 
-type ProductPayload = Omit<Product, "id" | "stats" | "badges" | "createdAt">;
+export type Product = ProductBase;
+
+export type AdminProduct = ProductBase & {
+  accountLoginEmail: string;
+  accountLoginPassword: string;
+};
+
+type AdminProductPayload = Omit<AdminProduct, "id" | "stats" | "badges" | "createdAt">;
 type ProductRecord = Prisma.ProductGetPayload<{
   include: {
     images: true;
@@ -66,6 +74,29 @@ export function formatPriceLabel(priceValue: number): string {
   return `${priceValue.toLocaleString("vi-VN")}đ`;
 }
 
+export function requiresAccountCredentials(priceValue: number): boolean {
+  return Number.isFinite(priceValue) && priceValue > 0 && priceValue <= PAYOS_MAX_AMOUNT;
+}
+
+export function validateProductCredentials(input: {
+  priceValue: number;
+  accountLoginEmail?: string | null;
+  accountLoginPassword?: string | null;
+}) {
+  if (!requiresAccountCredentials(input.priceValue)) {
+    return null;
+  }
+
+  const email = input.accountLoginEmail?.trim() ?? "";
+  const password = input.accountLoginPassword?.trim() ?? "";
+
+  if (!email || !password) {
+    return "Acc dưới 30 triệu cần có email và mật khẩu tài khoản để giao tự động sau khi thanh toán.";
+  }
+
+  return null;
+}
+
 export function buildBadgesFromFields(
   skinXe: string,
   thanhGiap: string,
@@ -82,7 +113,7 @@ export function buildBadgesFromFields(
   return badges;
 }
 
-function mapProduct(record: ProductRecord): Product {
+function mapProductBase(record: ProductRecord): ProductBase {
   const skinXe = record.skinXe ?? "";
   const thanhGiap = record.thanhGiap ?? "";
   const doBAPE = record.doBAPE ?? "";
@@ -113,6 +144,18 @@ function mapProduct(record: ProductRecord): Product {
   };
 }
 
+function mapProduct(record: ProductRecord): Product {
+  return mapProductBase(record);
+}
+
+function mapAdminProduct(record: ProductRecord): AdminProduct {
+  return {
+    ...mapProductBase(record),
+    accountLoginEmail: record.accountLoginEmail ?? "",
+    accountLoginPassword: record.accountLoginPassword ?? "",
+  };
+}
+
 function decodeMaybeEncodedSlug(input: string) {
   try {
     return decodeURIComponent(input);
@@ -124,16 +167,11 @@ function decodeMaybeEncodedSlug(input: string) {
 function buildSlugCandidates(slug: string) {
   const decoded = decodeMaybeEncodedSlug(slug);
   const normalized = decoded.trim().replace(/\s+/g, " ");
-
-  return Array.from(
-    new Set(
-      [slug, decoded, normalized, normalized.replace(/%20/gi, " ")].filter(Boolean),
-    ),
-  );
+  return Array.from(new Set([slug, decoded, normalized, normalized.replace(/%20/gi, " ")].filter(Boolean)));
 }
 
-export async function getAllProducts(): Promise<Product[]> {
-  const products = await prisma.product.findMany({
+async function findManyProducts() {
+  return prisma.product.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       images: {
@@ -141,12 +179,10 @@ export async function getAllProducts(): Promise<Product[]> {
       },
     },
   });
-
-  return products.map(mapProduct);
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
-  const product = await prisma.product.findUnique({
+async function findProductById(id: string) {
+  return prisma.product.findUnique({
     where: { id },
     include: {
       images: {
@@ -154,8 +190,26 @@ export async function getProductById(id: string): Promise<Product | null> {
       },
     },
   });
+}
 
+export async function getAllProducts(): Promise<Product[]> {
+  const products = await findManyProducts();
+  return products.map(mapProduct);
+}
+
+export async function getAllProductsForAdmin(): Promise<AdminProduct[]> {
+  const products = await findManyProducts();
+  return products.map(mapAdminProduct);
+}
+
+export async function getProductById(id: string): Promise<Product | null> {
+  const product = await findProductById(id);
   return product ? mapProduct(product) : null;
+}
+
+export async function getProductByIdForAdmin(id: string): Promise<AdminProduct | null> {
+  const product = await findProductById(id);
+  return product ? mapAdminProduct(product) : null;
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -180,10 +234,12 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return product ? mapProduct(product) : null;
 }
 
-export async function createProduct(data: ProductPayload): Promise<Product> {
+export async function createProduct(data: AdminProductPayload): Promise<AdminProduct> {
   const skinXe = data.skinXe ?? "";
   const thanhGiap = data.thanhGiap ?? "";
   const doBAPE = data.doBAPE ?? "";
+  const accountLoginEmail = data.accountLoginEmail?.trim() ?? "";
+  const accountLoginPassword = data.accountLoginPassword?.trim() ?? "";
 
   const product = await prisma.product.create({
     data: {
@@ -201,6 +257,8 @@ export async function createProduct(data: ProductPayload): Promise<Product> {
       skinXe,
       thanhGiap,
       doBAPE,
+      accountLoginEmail: accountLoginEmail || null,
+      accountLoginPassword: accountLoginPassword || null,
       isFeaturedHero: data.isFeaturedHero ?? false,
       featuredWeekRank: data.featuredWeekRank ?? null,
       status: statusToDb(data.status),
@@ -219,10 +277,10 @@ export async function createProduct(data: ProductPayload): Promise<Product> {
     },
   });
 
-  return mapProduct(product);
+  return mapAdminProduct(product);
 }
 
-export async function updateProduct(id: string, data: Partial<ProductPayload>): Promise<Product | null> {
+export async function updateProduct(id: string, data: Partial<AdminProductPayload>): Promise<AdminProduct | null> {
   const existing = await prisma.product.findUnique({
     where: { id },
     include: {
@@ -232,15 +290,19 @@ export async function updateProduct(id: string, data: Partial<ProductPayload>): 
     },
   });
 
-  if (!existing) {
-    return null;
-  }
+  if (!existing) return null;
 
   const nextTier = data.tier ?? existing.tier;
   const nextTitle = data.title ?? existing.title;
   const nextSkinXe = data.skinXe ?? existing.skinXe ?? "";
   const nextThanhGiap = data.thanhGiap ?? existing.thanhGiap ?? "";
   const nextDoBAPE = data.doBAPE ?? existing.doBAPE ?? "";
+  const nextAccountLoginEmail =
+    data.accountLoginEmail !== undefined ? data.accountLoginEmail.trim() : existing.accountLoginEmail ?? "";
+  const nextAccountLoginPassword =
+    data.accountLoginPassword !== undefined
+      ? data.accountLoginPassword.trim()
+      : existing.accountLoginPassword ?? "";
 
   const product = await prisma.$transaction(async (tx) => {
     if (data.images) {
@@ -264,6 +326,8 @@ export async function updateProduct(id: string, data: Partial<ProductPayload>): 
         skinXe: nextSkinXe,
         thanhGiap: nextThanhGiap,
         doBAPE: nextDoBAPE,
+        accountLoginEmail: nextAccountLoginEmail || null,
+        accountLoginPassword: nextAccountLoginPassword || null,
         isFeaturedHero: data.isFeaturedHero,
         featuredWeekRank: data.featuredWeekRank,
         status: data.status ? statusToDb(data.status) : undefined,
@@ -285,7 +349,7 @@ export async function updateProduct(id: string, data: Partial<ProductPayload>): 
     });
   });
 
-  return mapProduct(product);
+  return mapAdminProduct(product);
 }
 
 export async function getFeaturedHeroProduct(): Promise<Product | null> {

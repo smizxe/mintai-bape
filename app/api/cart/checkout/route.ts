@@ -42,6 +42,19 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  const missingDeliveryInfo = cart.items.find(
+    (item) => !item.accountLoginEmail.trim() || !item.accountLoginPassword.trim(),
+  );
+
+  if (missingDeliveryInfo) {
+    return NextResponse.json(
+      {
+        error: `Sản phẩm ${missingDeliveryInfo.title} chưa có thông tin tài khoản để giao tự động. Vui lòng cập nhật lại trong quản trị trước khi thanh toán.`,
+      },
+      { status: 400 },
+    );
+  }
+
   let payOS;
   try {
     payOS = getPayOSClient();
@@ -50,10 +63,19 @@ export async function POST(req: NextRequest) {
   }
 
   const orderCode = buildPayOSOrderCode();
-  const pendingOrder = await createPendingOrderFromCart({
-    userId: user.id,
-    orderCode,
-  });
+  let pendingOrder;
+
+  try {
+    pendingOrder = await createPendingOrderFromCart({
+      userId: user.id,
+      orderCode,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Chưa thể tạo đơn thanh toán." },
+      { status: 400 },
+    );
+  }
 
   if (!pendingOrder) {
     return NextResponse.json({ error: "Chưa thể tạo đơn thanh toán." }, { status: 400 });
@@ -74,7 +96,7 @@ export async function POST(req: NextRequest) {
       buyerName: user.displayName,
       items: cart.items.map((item) => ({
         name: item.title.slice(0, 25),
-        quantity: item.quantity,
+        quantity: 1,
         price: item.priceValue,
       })),
     });
@@ -91,10 +113,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     await cancelOrderById(pendingOrder.id);
-
-    return NextResponse.json(
-      { error: getPayOSErrorMessage(error) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: getPayOSErrorMessage(error) }, { status: 500 });
   }
 }

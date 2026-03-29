@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { markOrderPaidByPaymentCode } from "@/lib/commerce-store";
+import { sendOrderDeliveryEmailByPaymentCode } from "@/lib/order-delivery";
 import { getPayOSClient } from "@/lib/payos";
 
 export async function POST(req: NextRequest) {
@@ -10,6 +11,11 @@ export async function POST(req: NextRequest) {
 
     if (verified.code === "00") {
       await markOrderPaidByPaymentCode(String(verified.orderCode));
+      try {
+        await sendOrderDeliveryEmailByPaymentCode(String(verified.orderCode));
+      } catch (error) {
+        console.error("Failed to send delivery email", error);
+      }
     }
 
     return NextResponse.json({ ok: true });
