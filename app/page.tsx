@@ -208,7 +208,7 @@ export default async function Home() {
                     <strong>{account.price}</strong>
                     <div className="product-card-actions">
                       <Link href="/user">Mua ngay</Link>
-                      <Link href={`/products/${account.slug}`}>
+                      <Link href={`/products/${encodeURIComponent(account.code)}`}>
                         Xem chi tiết
                         <ArrowRight size={15} />
                       </Link>

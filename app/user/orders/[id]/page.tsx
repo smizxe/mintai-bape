@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Menu } from "lucide-react";
@@ -45,22 +45,22 @@ export default async function OrderDetailPage({
           <div className="product-detail-back">
             <Link href="/user">
               <ArrowLeft size={16} />
-              Quay lại hồ sơ
+              Quay láº¡i há»“ sÆ¡
             </Link>
           </div>
 
           <section className="dashboard-table-card order-detail-card">
             <div className="dashboard-card-head">
-              <h1>Chi tiết đơn hàng</h1>
+              <h1>Chi tiáº¿t Ä‘Æ¡n hÃ ng</h1>
               <span>
-                Đơn #{order.id.slice(-6).toUpperCase()} • {new Date(order.createdAt).toLocaleString("vi-VN")}
+                ÄÆ¡n #{order.id.slice(-6).toUpperCase()} â€¢ {new Date(order.createdAt).toLocaleString("vi-VN")}
               </span>
             </div>
 
             <div className="order-detail-topline">
               <div>
                 <strong>{order.totalLabel}</strong>
-                <span>{order.itemCount} sản phẩm</span>
+                <span>{order.itemCount} sáº£n pháº©m</span>
               </div>
               <span className="admin-status order-status">{getOrderStatusLabel(order.status)}</span>
             </div>
@@ -76,7 +76,7 @@ export default async function OrderDetailPage({
                   </div>
                   <div className="order-detail-item-meta">
                     <strong>{item.lineTotalLabel}</strong>
-                    {item.productSlug ? <Link href={`/products/${item.productSlug}`}>Xem lại sản phẩm</Link> : null}
+                    {item.productSlug ? <Link href={`/products/${encodeURIComponent(item.productSlug)}`}>Xem láº¡i sáº£n pháº©m</Link> : null}
                   </div>
                 </article>
               ))}
@@ -89,3 +89,4 @@ export default async function OrderDetailPage({
     </>
   );
 }
+

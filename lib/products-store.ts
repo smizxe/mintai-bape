@@ -41,6 +41,8 @@ type ProductRecord = Prisma.ProductGetPayload<{
   };
 }>;
 
+const PRODUCT_CODE_PATTERN = /^[A-Za-z0-9-]+$/;
+
 function statusToUi(status: ProductStatus | string | null | undefined): string {
   return (status ?? "ACTIVE").toString().toLowerCase();
 }
@@ -76,6 +78,24 @@ export function formatPriceLabel(priceValue: number): string {
 
 export function requiresAccountCredentials(priceValue: number): boolean {
   return Number.isFinite(priceValue) && priceValue > 0 && priceValue <= PAYOS_MAX_AMOUNT;
+}
+
+export function normalizeProductCode(input: string): string {
+  return input.trim();
+}
+
+export function validateProductCode(input: string): string | null {
+  const code = normalizeProductCode(input);
+
+  if (!code) {
+    return "Bạn cần nhập ID acc.";
+  }
+
+  if (!PRODUCT_CODE_PATTERN.test(code)) {
+    return "ID acc chỉ được gồm chữ, số và dấu gạch ngang (-), không dùng khoảng trắng hay ký tự đặc biệt.";
+  }
+
+  return null;
 }
 
 export function validateProductCredentials(input: {
@@ -121,7 +141,7 @@ function mapProductBase(record: ProductRecord): ProductBase {
   return {
     id: record.id,
     code: record.code,
-    slug: record.slug,
+    slug: record.code,
     title: record.title,
     tag: record.tag,
     tier: record.tier,
@@ -156,7 +176,7 @@ function mapAdminProduct(record: ProductRecord): AdminProduct {
   };
 }
 
-function decodeMaybeEncodedSlug(input: string) {
+function decodeMaybeEncodedCode(input: string) {
   try {
     return decodeURIComponent(input);
   } catch {
@@ -164,10 +184,10 @@ function decodeMaybeEncodedSlug(input: string) {
   }
 }
 
-function buildSlugCandidates(slug: string) {
-  const decoded = decodeMaybeEncodedSlug(slug);
-  const normalized = decoded.trim().replace(/\s+/g, " ");
-  return Array.from(new Set([slug, decoded, normalized, normalized.replace(/%20/gi, " ")].filter(Boolean)));
+function buildCodeCandidates(code: string) {
+  const decoded = decodeMaybeEncodedCode(code);
+  const normalized = normalizeProductCode(decoded);
+  return Array.from(new Set([code, decoded, normalized].filter(Boolean)));
 }
 
 async function findManyProducts() {
@@ -212,17 +232,25 @@ export async function getProductByIdForAdmin(id: string): Promise<AdminProduct |
   return product ? mapAdminProduct(product) : null;
 }
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const candidates = buildSlugCandidates(slug);
+export async function getProductByCode(code: string): Promise<Product | null> {
+  const candidates = buildCodeCandidates(code);
 
   const product = await prisma.product.findFirst({
     where: {
-      OR: candidates.map((candidate) => ({
-        slug: {
-          equals: candidate,
-          mode: "insensitive",
+      OR: candidates.flatMap((candidate) => [
+        {
+          code: {
+            equals: candidate,
+            mode: "insensitive",
+          },
         },
-      })),
+        {
+          slug: {
+            equals: candidate,
+            mode: "insensitive",
+          },
+        },
+      ]),
     },
     include: {
       images: {
@@ -234,17 +262,22 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return product ? mapProduct(product) : null;
 }
 
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  return getProductByCode(slug);
+}
+
 export async function createProduct(data: AdminProductPayload): Promise<AdminProduct> {
   const skinXe = data.skinXe ?? "";
   const thanhGiap = data.thanhGiap ?? "";
   const doBAPE = data.doBAPE ?? "";
   const accountLoginEmail = data.accountLoginEmail?.trim() ?? "";
   const accountLoginPassword = data.accountLoginPassword?.trim() ?? "";
+  const normalizedCode = normalizeProductCode(data.code);
 
   const product = await prisma.product.create({
     data: {
-      code: data.code,
-      slug: data.slug,
+      code: normalizedCode,
+      slug: normalizedCode,
       title: data.title,
       tag: data.tag,
       tier: data.tier,
@@ -303,6 +336,7 @@ export async function updateProduct(id: string, data: Partial<AdminProductPayloa
     data.accountLoginPassword !== undefined
       ? data.accountLoginPassword.trim()
       : existing.accountLoginPassword ?? "";
+  const nextCode = data.code !== undefined ? normalizeProductCode(data.code) : existing.code;
 
   const product = await prisma.$transaction(async (tx) => {
     if (data.images) {
@@ -312,8 +346,8 @@ export async function updateProduct(id: string, data: Partial<AdminProductPayloa
     return tx.product.update({
       where: { id },
       data: {
-        code: data.code,
-        slug: data.slug,
+        code: nextCode,
+        slug: nextCode,
         title: data.title,
         tag: data.tag,
         tier: data.tier,

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductGallery } from "@/components/product-gallery";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { getProductBySlug } from "@/lib/products-store";
+import { getProductByCode } from "@/lib/products-store";
 
 export default async function ProductDetailPage({
   params,
@@ -12,7 +12,7 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getProductByCode(slug);
 
   if (!product) {
     notFound();

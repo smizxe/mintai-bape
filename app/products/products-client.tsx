@@ -328,7 +328,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                     <strong>{account.price}</strong>
                     <div className="product-card-actions">
                       <AddToCartButton productId={account.id} priceValue={account.priceValue} />
-                      <Link href={`/products/${account.slug}`}>
+                      <Link href={`/products/${encodeURIComponent(account.code)}`}>
                         Xem chi tiết
                         <ArrowRight size={15} />
                       </Link>

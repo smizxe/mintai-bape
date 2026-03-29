@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import Image from "next/image";
@@ -20,10 +20,10 @@ import type { AdminProduct } from "@/lib/products-store";
 import { PAYOS_MAX_AMOUNT } from "@/lib/shop-config";
 
 const STATUSES = [
-  { value: "active", label: "Đang bán" },
-  { value: "draft", label: "Nháp" },
-  { value: "sold", label: "Đã bán" },
-  { value: "archived", label: "Ẩn" },
+  { value: "active", label: "Äang bÃ¡n" },
+  { value: "draft", label: "NhÃ¡p" },
+  { value: "sold", label: "ÄÃ£ bÃ¡n" },
+  { value: "archived", label: "áº¨n" },
 ] as const;
 
 type FormTab = "card" | "detail" | "account";
@@ -66,29 +66,31 @@ const EMPTY_FORM: ProductForm = {
   status: "active",
 };
 
-function slugify(text: string) {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "d")
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
-}
-
 function formatPriceLabel(value: string) {
   const numeric = Number(value.replace(/\D/g, "")) || 0;
-  if (!numeric) return "0đ";
-  return `${numeric.toLocaleString("vi-VN")}đ`;
+  if (!numeric) return "0Ä‘";
+  return `${numeric.toLocaleString("vi-VN")}Ä‘`;
+}
+
+function validateProductCodeInput(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "Bạn cần nhập ID acc.";
+  }
+
+  if (!/^[A-Za-z0-9-]+$/.test(trimmed)) {
+    return "ID acc chỉ được gồm chữ, số và dấu gạch ngang (-), không dùng khoảng trắng hay ký tự đặc biệt.";
+  }
+
+  return null;
 }
 
 function productToForm(product: AdminProduct): ProductForm {
   return {
     code: product.code,
     title: product.title,
-    slug: product.slug,
+    slug: product.code,
     tag: product.tag,
     tier: product.tier,
     priceValue: String(product.priceValue),
@@ -148,10 +150,10 @@ function ImageUploader({
         if (response.ok && Array.isArray(data.urls)) {
           onChange([...images, ...data.urls]);
         } else {
-          alert(data.error ?? "Upload thất bại");
+          alert(data.error ?? "Upload tháº¥t báº¡i");
         }
       } catch {
-        alert("Lỗi kết nối khi upload");
+        alert("Lá»—i káº¿t ná»‘i khi upload");
       } finally {
         setUploading(false);
       }
@@ -211,13 +213,13 @@ function ImageUploader({
         {uploading ? (
           <div className="af-dropzone-content">
             <Upload size={28} className="af-spin" />
-            <span>Đang upload...</span>
+            <span>Äang upload...</span>
           </div>
         ) : (
           <div className="af-dropzone-content">
             <ImagePlus size={28} />
-            <span>Kéo thả ảnh vào đây hoặc click để chọn</span>
-            <span className="af-dropzone-hint">PNG, JPG, WebP - tối đa 5MB mỗi ảnh</span>
+            <span>KÃ©o tháº£ áº£nh vÃ o Ä‘Ã¢y hoáº·c click Ä‘á»ƒ chá»n</span>
+            <span className="af-dropzone-hint">PNG, JPG, WebP - tá»‘i Ä‘a 5MB má»—i áº£nh</span>
           </div>
         )}
       </div>
@@ -228,7 +230,7 @@ function ImageUploader({
             <div key={`${url}-${index}`} className="af-image-thumb">
               <Image
                 src={url}
-                alt={`Ảnh ${index + 1}`}
+                alt={`áº¢nh ${index + 1}`}
                 width={120}
                 height={120}
                 className="af-thumb-img"
@@ -237,11 +239,11 @@ function ImageUploader({
                 type="button"
                 className="af-thumb-remove"
                 onClick={() => removeImage(index)}
-                title="Xóa ảnh"
+                title="XÃ³a áº£nh"
               >
                 <X size={14} />
               </button>
-              {index === 0 && <span className="af-thumb-main">Ảnh chính</span>}
+              {index === 0 && <span className="af-thumb-main">áº¢nh chÃ­nh</span>}
             </div>
           ))}
         </div>
@@ -288,7 +290,7 @@ export function AdminProductsClient({
         map.set(product.tier, {
           id: product.id,
           name: product.tier,
-          slug: product.tier,
+          slug: product.id,
           className: product.tierClass || "tier-starter",
           sortOrder: 999,
         });
@@ -333,10 +335,10 @@ export function AdminProductsClient({
     allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.includes(id));
 
   const statusLabel: Record<string, string> = {
-    active: "Đang bán",
-    draft: "Nháp",
-    sold: "Đã bán",
-    archived: "Ẩn",
+    active: "Äang bÃ¡n",
+    draft: "NhÃ¡p",
+    sold: "ÄÃ£ bÃ¡n",
+    archived: "áº¨n",
   };
 
   function setField<Key extends keyof ProductForm>(key: Key, value: ProductForm[Key]) {
@@ -392,8 +394,15 @@ export function AdminProductsClient({
     setSaving(true);
     setError("");
 
-    if (!form.code.trim() || !form.title.trim() || !form.slug.trim()) {
-      setError("Bạn cần nhập mã acc, tên sản phẩm và slug.");
+    const codeError = validateProductCodeInput(form.code);
+    if (codeError) {
+      setError(codeError);
+      setSaving(false);
+      return;
+    }
+
+    if (!form.title.trim()) {
+      setError("Bạn cần nhập tên sản phẩm.");
       setSaving(false);
       return;
     }
@@ -402,7 +411,7 @@ export function AdminProductsClient({
       requiresAccountInfo(form.priceValue) &&
       (!form.accountLoginEmail.trim() || !form.accountLoginPassword.trim())
     ) {
-      setError("Acc dưới 30 triệu cần có email và mật khẩu để giao tự động sau khi khách thanh toán.");
+      setError("Acc dÆ°á»›i 30 triá»‡u cáº§n cÃ³ email vÃ  máº­t kháº©u Ä‘á»ƒ giao tá»± Ä‘á»™ng sau khi khÃ¡ch thanh toÃ¡n.");
       setSaving(false);
       setFormTab("account");
       return;
@@ -430,44 +439,44 @@ export function AdminProductsClient({
 
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? "Lưu sản phẩm thất bại.");
+        setError(data.error ?? "LÆ°u sáº£n pháº©m tháº¥t báº¡i.");
         return;
       }
 
       if (mode === "create") {
         setProducts((prev) => [data, ...prev]);
-        setSuccessMsg("Tạo sản phẩm thành công.");
+        setSuccessMsg("Táº¡o sáº£n pháº©m thÃ nh cÃ´ng.");
       } else {
         setProducts((prev) => prev.map((product) => (product.id === editingId ? data : product)));
-        setSuccessMsg("Cập nhật sản phẩm thành công.");
+        setSuccessMsg("Cáº­p nháº­t sáº£n pháº©m thÃ nh cÃ´ng.");
       }
 
       closeForm();
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch {
-      setError("Lỗi kết nối. Thử lại.");
+      setError("Lá»—i káº¿t ná»‘i. Thá»­ láº¡i.");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Xóa sản phẩm này? Không thể hoàn tác.")) return;
+    if (!window.confirm("XÃ³a sáº£n pháº©m nÃ y? KhÃ´ng thá»ƒ hoÃ n tÃ¡c.")) return;
 
     setDeletingId(id);
     try {
       const response = await fetch(`/api/products/${id}`, { method: "DELETE" });
       if (!response.ok) {
-        window.alert("Xóa thất bại. Thử lại.");
+        window.alert("XÃ³a tháº¥t báº¡i. Thá»­ láº¡i.");
         return;
       }
 
       setProducts((prev) => prev.filter((product) => product.id !== id));
       setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
-      setSuccessMsg("Đã xóa sản phẩm.");
+      setSuccessMsg("ÄÃ£ xÃ³a sáº£n pháº©m.");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch {
-      window.alert("Lỗi kết nối.");
+      window.alert("Lá»—i káº¿t ná»‘i.");
     } finally {
       setDeletingId(null);
     }
@@ -475,7 +484,7 @@ export function AdminProductsClient({
 
   async function handleBulkApply() {
     if (bulkAction === "none" || selectedIds.length === 0) return;
-    if (bulkAction === "delete" && !window.confirm(`Xóa ${selectedIds.length} sản phẩm đã chọn?`)) {
+    if (bulkAction === "delete" && !window.confirm(`XÃ³a ${selectedIds.length} sáº£n pháº©m Ä‘Ã£ chá»n?`)) {
       return;
     }
 
@@ -490,11 +499,11 @@ export function AdminProductsClient({
         const failed = results.some((response) => !response.ok);
 
         if (failed) {
-          setError("Có sản phẩm chưa xóa được. Thử lại.");
+          setError("CÃ³ sáº£n pháº©m chÆ°a xÃ³a Ä‘Æ°á»£c. Thá»­ láº¡i.");
         } else {
           setProducts((prev) => prev.filter((product) => !selectedIds.includes(product.id)));
           setSelectedIds([]);
-          setSuccessMsg(`Đã xóa ${results.length} sản phẩm.`);
+          setSuccessMsg(`ÄÃ£ xÃ³a ${results.length} sáº£n pháº©m.`);
         }
       } else {
         const selectedProducts = products.filter((product) => selectedIds.includes(product.id));
@@ -513,13 +522,13 @@ export function AdminProductsClient({
 
         setProducts((prev) => prev.map((product) => updated.find((item) => item.id === product.id) ?? product));
         setSelectedIds([]);
-        setSuccessMsg(`Đã cập nhật ${updated.length} sản phẩm.`);
+        setSuccessMsg(`ÄÃ£ cáº­p nháº­t ${updated.length} sáº£n pháº©m.`);
       }
 
       setBulkAction("none");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch {
-      setError("Hành động hàng loạt thất bại. Kiểm tra rồi thử lại.");
+      setError("HÃ nh Ä‘á»™ng hÃ ng loáº¡t tháº¥t báº¡i. Kiá»ƒm tra rá»“i thá»­ láº¡i.");
     } finally {
       setBulkBusy(false);
     }
@@ -531,16 +540,16 @@ export function AdminProductsClient({
         <div className="admin-products-title">
           <Link href="/admin" className="admin-back-link">
             <ArrowLeft size={16} />
-            Tổng quan
+            Tá»•ng quan
           </Link>
-          <h1>Quản lý account</h1>
-          <span className="admin-products-count">{products.length} sản phẩm</span>
+          <h1>Quáº£n lÃ½ account</h1>
+          <span className="admin-products-count">{products.length} sáº£n pháº©m</span>
         </div>
 
         {mode === "list" && (
           <button type="button" className="admin-btn-primary" onClick={openCreate}>
             <Plus size={16} />
-            Thêm sản phẩm
+            ThÃªm sáº£n pháº©m
           </button>
         )}
       </div>
@@ -550,7 +559,7 @@ export function AdminProductsClient({
       {(mode === "create" || mode === "edit") && (
         <div className="af-panel">
           <div className="af-header">
-            <h2>{mode === "create" ? "Thêm sản phẩm mới" : `Chỉnh sửa: ${form.title || "..."}`}</h2>
+            <h2>{mode === "create" ? "ThÃªm sáº£n pháº©m má»›i" : `Chá»‰nh sá»­a: ${form.title || "..."}`}</h2>
             <button type="button" className="af-close" onClick={closeForm}>
               <X size={20} />
             </button>
@@ -562,21 +571,21 @@ export function AdminProductsClient({
               className={`af-tab ${formTab === "card" ? "af-tab-active" : ""}`}
               onClick={() => setFormTab("card")}
             >
-              Thông tin card
+              ThÃ´ng tin card
             </button>
             <button
               type="button"
               className={`af-tab ${formTab === "detail" ? "af-tab-active" : ""}`}
               onClick={() => setFormTab("detail")}
             >
-              Trang chi tiết
+              Trang chi tiáº¿t
             </button>
             <button
               type="button"
               className={`af-tab ${formTab === "account" ? "af-tab-active" : ""}`}
               onClick={() => setFormTab("account")}
             >
-              Thông tin tài khoản
+              ThÃ´ng tin tÃ i khoáº£n
             </button>
           </div>
 
@@ -584,23 +593,28 @@ export function AdminProductsClient({
             <div className="af-body">
               <div className="af-row-2">
                 <label className="af-field">
-                  <span>Mã acc</span>
+                  <span>ID acc</span>
                   <input
                     type="text"
                     value={form.code}
-                    onChange={(event) => setField("code", event.target.value)}
-                    placeholder="RD-1024"
+                    onChange={(event) => {
+                      const nextCode = event.target.value;
+                      setField("code", nextCode);
+                      setField("slug", nextCode);
+                    }}
+                    placeholder="BST-82"
                   />
+                  <small className="af-field-hint">Chỉ dùng chữ, số và dấu gạch ngang (-).</small>
                 </label>
 
                 <label className="af-field">
-                  <span>Loại acc</span>
+                  <span>Loáº¡i acc</span>
                   <input
                     list="account-type-options"
                     type="text"
                     value={form.tier}
                     onChange={(event) => setField("tier", event.target.value)}
-                    placeholder="Acc xịn"
+                    placeholder="Acc xá»‹n"
                   />
                   <datalist id="account-type-options">
                     {accountTypeOptions.map((item) => (
@@ -611,7 +625,7 @@ export function AdminProductsClient({
               </div>
 
               <label className="af-field">
-                <span>Tên sản phẩm</span>
+                <span>TÃªn sáº£n pháº©m</span>
                 <input
                   type="text"
                   value={form.title}
@@ -619,26 +633,6 @@ export function AdminProductsClient({
                   placeholder="Glacier X-Suit Vault"
                 />
               </label>
-
-              <div className="af-row-slug">
-                <label className="af-field">
-                  <span>Slug</span>
-                  <input
-                    type="text"
-                    value={form.slug}
-                    onChange={(event) => setField("slug", event.target.value)}
-                    placeholder="glacier-x-suit-vault"
-                  />
-                </label>
-
-                <button
-                  type="button"
-                  className="af-btn-ghost"
-                  onClick={() => setField("slug", slugify(form.title))}
-                >
-                  Tạo từ tên
-                </button>
-              </div>
 
               <div className="af-row-2">
                 <label className="af-field">
@@ -652,7 +646,7 @@ export function AdminProductsClient({
                 </label>
 
                 <label className="af-field">
-                  <span>Trạng thái</span>
+                  <span>Tráº¡ng thÃ¡i</span>
                   <select
                     value={form.status}
                     onChange={(event) => setField("status", event.target.value)}
@@ -667,7 +661,7 @@ export function AdminProductsClient({
               </div>
 
               <label className="af-field">
-                <span>Giá bán</span>
+                <span>GiÃ¡ bÃ¡n</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -675,21 +669,21 @@ export function AdminProductsClient({
                   onChange={(event) => setPriceValue(event.target.value)}
                   placeholder="6900000"
                 />
-                <small className="af-field-hint">Hiển thị ngoài shop: {formatPriceLabel(form.priceValue)}</small>
+                <small className="af-field-hint">Hiá»ƒn thá»‹ ngoÃ i shop: {formatPriceLabel(form.priceValue)}</small>
               </label>
 
               <label className="af-field">
-                <span>Mô tả card</span>
+                <span>MÃ´ táº£ card</span>
                 <textarea
                   value={form.summary}
                   onChange={(event) => setField("summary", event.target.value)}
                   rows={2}
-                  placeholder="Mô tả ngắn gọn hiển thị trên card sản phẩm..."
+                  placeholder="MÃ´ táº£ ngáº¯n gá»n hiá»ƒn thá»‹ trÃªn card sáº£n pháº©m..."
                 />
               </label>
 
               <div className="af-divider" />
-              <p className="af-section-label">3 điểm nổi bật</p>
+              <p className="af-section-label">3 Ä‘iá»ƒm ná»•i báº­t</p>
 
               <label className="af-field af-bullet af-bullet-xe">
                 <span>Skin xe</span>
@@ -702,17 +696,17 @@ export function AdminProductsClient({
               </label>
 
               <label className="af-field af-bullet af-bullet-giap">
-                <span>Thánh giáp</span>
+                <span>ThÃ¡nh giÃ¡p</span>
                 <input
                   type="text"
                   value={form.thanhGiap}
                   onChange={(event) => setField("thanhGiap", event.target.value)}
-                  placeholder="Thánh giáp mùa 16"
+                  placeholder="ThÃ¡nh giÃ¡p mÃ¹a 16"
                 />
               </label>
 
               <label className="af-field af-bullet af-bullet-bape">
-                <span>Đồ BAPE</span>
+                <span>Äá»“ BAPE</span>
                 <input
                   type="text"
                   value={form.doBAPE}
@@ -726,17 +720,17 @@ export function AdminProductsClient({
           {formTab === "detail" && (
             <div className="af-body">
               <label className="af-field">
-                <span>Mô tả ngắn</span>
+                <span>MÃ´ táº£ ngáº¯n</span>
                 <textarea
                   value={form.shortDescription}
                   onChange={(event) => setField("shortDescription", event.target.value)}
                   rows={3}
-                  placeholder="Đoạn mô tả ngắn hiển thị ở đầu trang chi tiết..."
+                  placeholder="Äoáº¡n mÃ´ táº£ ngáº¯n hiá»ƒn thá»‹ á»Ÿ Ä‘áº§u trang chi tiáº¿t..."
                 />
               </label>
 
               <div className="af-field">
-                <span className="af-field-label">Mô tả đầy đủ</span>
+                <span className="af-field-label">MÃ´ táº£ Ä‘áº§y Ä‘á»§</span>
                 <div className="af-quill-wrap">
                   <RichTextEditor
                     value={form.descriptionHtml}
@@ -748,7 +742,7 @@ export function AdminProductsClient({
               <div className="af-divider" />
 
               <div className="af-field">
-                <span className="af-field-label">Ảnh sản phẩm</span>
+                <span className="af-field-label">áº¢nh sáº£n pháº©m</span>
                 <ImageUploader images={form.images} onChange={(urls) => setField("images", urls)} />
               </div>
             </div>
@@ -757,16 +751,16 @@ export function AdminProductsClient({
           {formTab === "account" && (
             <div className="af-body">
               <div className="af-field af-note-block">
-                <span className="af-field-label">Thông tin đăng nhập giao cho khách</span>
+                <span className="af-field-label">ThÃ´ng tin Ä‘Äƒng nháº­p giao cho khÃ¡ch</span>
                 <small className="af-field-hint">
                   {requiresAccountInfo(form.priceValue)
-                    ? "Acc dưới 30 triệu bắt buộc có email và mật khẩu để hệ thống gửi tự động sau khi thanh toán."
-                    : "Acc trên 30 triệu có thể để trống vì khách sẽ được chuyển sang Zalo để chốt trực tiếp."}
+                    ? "Acc dÆ°á»›i 30 triá»‡u báº¯t buá»™c cÃ³ email vÃ  máº­t kháº©u Ä‘á»ƒ há»‡ thá»‘ng gá»­i tá»± Ä‘á»™ng sau khi thanh toÃ¡n."
+                    : "Acc trÃªn 30 triá»‡u cÃ³ thá»ƒ Ä‘á»ƒ trá»‘ng vÃ¬ khÃ¡ch sáº½ Ä‘Æ°á»£c chuyá»ƒn sang Zalo Ä‘á»ƒ chá»‘t trá»±c tiáº¿p."}
                 </small>
               </div>
 
               <label className="af-field">
-                <span>Email tài khoản</span>
+                <span>Email tÃ i khoáº£n</span>
                 <input
                   type="text"
                   value={form.accountLoginEmail}
@@ -776,12 +770,12 @@ export function AdminProductsClient({
               </label>
 
               <label className="af-field">
-                <span>Mật khẩu tài khoản</span>
+                <span>Máº­t kháº©u tÃ i khoáº£n</span>
                 <input
                   type="text"
                   value={form.accountLoginPassword}
                   onChange={(event) => setField("accountLoginPassword", event.target.value)}
-                  placeholder="Nhập mật khẩu bàn giao cho khách"
+                  placeholder="Nháº­p máº­t kháº©u bÃ n giao cho khÃ¡ch"
                 />
               </label>
             </div>
@@ -791,11 +785,11 @@ export function AdminProductsClient({
 
           <div className="af-footer">
             <button type="button" className="af-btn-ghost" onClick={closeForm}>
-              Hủy
+              Há»§y
             </button>
             <button type="button" className="admin-btn-primary" onClick={handleSave} disabled={saving}>
               <Check size={16} />
-              {saving ? "Đang lưu..." : mode === "create" ? "Tạo sản phẩm" : "Lưu thay đổi"}
+              {saving ? "Äang lÆ°u..." : mode === "create" ? "Táº¡o sáº£n pháº©m" : "LÆ°u thay Ä‘á»•i"}
             </button>
           </div>
         </div>
@@ -808,13 +802,13 @@ export function AdminProductsClient({
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Tìm theo tên, mã, loại acc hoặc điểm nổi bật..."
+            placeholder="TÃ¬m theo tÃªn, mÃ£, loáº¡i acc hoáº·c Ä‘iá»ƒm ná»•i báº­t..."
           />
         </div>
 
         <div className="admin-filter-group">
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            <option value="all">Tất cả trạng thái</option>
+            <option value="all">Táº¥t cáº£ tráº¡ng thÃ¡i</option>
             {STATUSES.map((status) => (
               <option key={status.value} value={status.value}>
                 {status.label}
@@ -823,7 +817,7 @@ export function AdminProductsClient({
           </select>
 
           <select value={tierFilter} onChange={(event) => setTierFilter(event.target.value)}>
-            <option value="all">Tất cả loại acc</option>
+            <option value="all">Táº¥t cáº£ loáº¡i acc</option>
             {accountTypeOptions.map((item) => (
               <option key={item.id} value={item.name}>
                 {item.name}
@@ -833,14 +827,14 @@ export function AdminProductsClient({
         </div>
 
         <div className="admin-bulk-bar">
-          <span>{selectedIds.length} mục đã chọn</span>
+          <span>{selectedIds.length} má»¥c Ä‘Ã£ chá»n</span>
           <select value={bulkAction} onChange={(event) => setBulkAction(event.target.value)}>
-            <option value="none">Hành động hàng loạt</option>
-            <option value="active">Chuyển sang Đang bán</option>
-            <option value="draft">Chuyển sang Nháp</option>
-            <option value="sold">Đánh dấu Đã bán</option>
-            <option value="archived">Ẩn sản phẩm</option>
-            <option value="delete">Xóa sản phẩm</option>
+            <option value="none">HÃ nh Ä‘á»™ng hÃ ng loáº¡t</option>
+            <option value="active">Chuyá»ƒn sang Äang bÃ¡n</option>
+            <option value="draft">Chuyá»ƒn sang NhÃ¡p</option>
+            <option value="sold">ÄÃ¡nh dáº¥u ÄÃ£ bÃ¡n</option>
+            <option value="archived">áº¨n sáº£n pháº©m</option>
+            <option value="delete">XÃ³a sáº£n pháº©m</option>
           </select>
 
           <button
@@ -849,13 +843,13 @@ export function AdminProductsClient({
             disabled={selectedIds.length === 0 || bulkAction === "none" || bulkBusy}
             onClick={handleBulkApply}
           >
-            {bulkBusy ? "Đang áp dụng..." : "Áp dụng"}
+            {bulkBusy ? "Äang Ã¡p dá»¥ng..." : "Ãp dá»¥ng"}
           </button>
         </div>
       </div>
 
       <div className="admin-list-summary">
-        <span>Hiển thị {filteredProducts.length} sản phẩm</span>
+        <span>Hiá»ƒn thá»‹ {filteredProducts.length} sáº£n pháº©m</span>
         {(searchTerm || statusFilter !== "all" || tierFilter !== "all") && (
           <button
             type="button"
@@ -866,7 +860,7 @@ export function AdminProductsClient({
               setTierFilter("all");
             }}
           >
-            Xóa bộ lọc
+            XÃ³a bá»™ lá»c
           </button>
         )}
       </div>
@@ -878,16 +872,16 @@ export function AdminProductsClient({
           <label className="admin-checkbox-cell">
             <input type="checkbox" checked={allVisibleSelected} onChange={toggleSelectAllVisible} />
           </label>
-          <span>Hành động</span>
-          <span>Mã / Tên</span>
-          <span>Loại acc</span>
-          <span>3 điểm nổi bật</span>
-          <span>Giá</span>
-          <span>Trạng thái</span>
+          <span>HÃ nh Ä‘á»™ng</span>
+          <span>MÃ£ / TÃªn</span>
+          <span>Loáº¡i acc</span>
+          <span>3 Ä‘iá»ƒm ná»•i báº­t</span>
+          <span>GiÃ¡</span>
+          <span>Tráº¡ng thÃ¡i</span>
         </div>
 
         {filteredProducts.length === 0 ? (
-          <div className="admin-empty-state">Không có sản phẩm nào khớp với bộ lọc hiện tại.</div>
+          <div className="admin-empty-state">KhÃ´ng cÃ³ sáº£n pháº©m nÃ o khá»›p vá»›i bá»™ lá»c hiá»‡n táº¡i.</div>
         ) : (
           filteredProducts.map((product) => (
             <div key={product.id} className="admin-table-row admin-table-row-extended">
@@ -947,3 +941,5 @@ export function AdminProductsClient({
     </div>
   );
 }
+
+

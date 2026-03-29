@@ -4,6 +4,7 @@ import {
   formatPriceLabel,
   getAllProducts,
   tierToClass,
+  validateProductCode,
   validateProductCredentials,
 } from "@/lib/products-store";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
@@ -54,6 +55,12 @@ export async function POST(req: NextRequest) {
   const accountLoginEmail = typeof body.accountLoginEmail === "string" ? body.accountLoginEmail.trim() : "";
   const accountLoginPassword =
     typeof body.accountLoginPassword === "string" ? body.accountLoginPassword.trim() : "";
+  const code = typeof body.code === "string" ? body.code : "";
+
+  const codeError = validateProductCode(code);
+  if (codeError) {
+    return NextResponse.json({ error: codeError }, { status: 400 });
+  }
 
   const credentialError = validateProductCredentials({
     priceValue,
@@ -68,8 +75,8 @@ export async function POST(req: NextRequest) {
   const tierClass = await resolveAccountTypeClass(tier);
 
   const product = await createProduct({
-    code: body.code ?? `RD-${Date.now()}`,
-    slug: body.slug ?? body.title?.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+    code,
+    slug: code,
     title: body.title ?? "Untitled",
     tag: body.tag ?? "",
     tier,

@@ -83,7 +83,7 @@ function mapCart(cart: CartWithProducts): CartView {
       id: item.id,
       quantity,
       title: item.product.title,
-      slug: item.product.slug,
+      slug: item.product.code,
       imageUrl: item.product.images[0]?.imageUrl ?? "/accounts/acc-01.svg",
       priceLabel: item.product.price,
       priceValue,
@@ -299,7 +299,7 @@ export async function createPendingOrderFromCart(input: {
       items: {
         create: cart.items.map((item) => ({
           productId: item.product.id,
-          productSlug: item.product.slug,
+          productSlug: item.product.code,
           title: item.product.title,
           imageUrl: item.product.images[0]?.imageUrl ?? null,
           priceLabel: item.product.price,

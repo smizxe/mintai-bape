@@ -5,6 +5,7 @@ import {
   getProductByIdForAdmin,
   tierToClass,
   updateProduct,
+  validateProductCode,
   validateProductCredentials,
 } from "@/lib/products-store";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
@@ -30,6 +31,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const update: Record<string, unknown> = { ...body };
+
+  if ("code" in body) {
+    const codeError = validateProductCode(typeof body.code === "string" ? body.code : "");
+    if (codeError) {
+      return NextResponse.json({ error: codeError }, { status: 400 });
+    }
+  }
 
   if ("tier" in body && body.tier) {
     update.tierClass = (await resolveAccountTypeClass(body.tier)) || tierToClass(body.tier);
