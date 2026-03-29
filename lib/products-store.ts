@@ -113,6 +113,25 @@ function mapProduct(record: ProductRecord): Product {
   };
 }
 
+function decodeMaybeEncodedSlug(input: string) {
+  try {
+    return decodeURIComponent(input);
+  } catch {
+    return input;
+  }
+}
+
+function buildSlugCandidates(slug: string) {
+  const decoded = decodeMaybeEncodedSlug(slug);
+  const normalized = decoded.trim().replace(/\s+/g, " ");
+
+  return Array.from(
+    new Set(
+      [slug, decoded, normalized, normalized.replace(/%20/gi, " ")].filter(Boolean),
+    ),
+  );
+}
+
 export async function getAllProducts(): Promise<Product[]> {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
@@ -140,8 +159,17 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const product = await prisma.product.findUnique({
-    where: { slug },
+  const candidates = buildSlugCandidates(slug);
+
+  const product = await prisma.product.findFirst({
+    where: {
+      OR: candidates.map((candidate) => ({
+        slug: {
+          equals: candidate,
+          mode: "insensitive",
+        },
+      })),
+    },
     include: {
       images: {
         orderBy: { position: "asc" },

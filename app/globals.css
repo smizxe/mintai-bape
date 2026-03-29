@@ -1818,11 +1818,20 @@ input {
   border: 3px solid #000;
   overflow: hidden;
   background: #111;
+  width: 100%;
+  padding: 0;
+  cursor: zoom-in;
 }
 
 .product-detail-hero-image img,
 .product-thumb img {
   object-fit: cover;
+}
+
+.product-gallery-caption {
+  font-size: 0.84rem;
+  color: #555;
+  line-height: 1.5;
 }
 
 .product-detail-thumbs {
@@ -1843,6 +1852,79 @@ input {
 .product-thumb-active {
   border-color: var(--rd-red);
   box-shadow: 4px 4px 0 #000;
+}
+
+.product-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+}
+
+.product-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  border: none;
+}
+
+.product-lightbox-inner {
+  position: relative;
+  z-index: 1;
+  width: min(calc(100vw - 32px), 1200px);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.product-lightbox-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: #111;
+  border: 3px solid #fff;
+  box-shadow: 10px 10px 0 #000;
+  overflow: hidden;
+}
+
+.product-lightbox-stage img {
+  object-fit: contain;
+}
+
+.product-lightbox-nav,
+.product-lightbox-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+.product-lightbox-nav {
+  width: 52px;
+  height: 52px;
+}
+
+.product-lightbox-close {
+  position: absolute;
+  top: -8px;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  z-index: 2;
+}
+
+.product-lightbox-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .product-detail-info {
@@ -2863,6 +2945,26 @@ input {
 
   .product-detail-thumbs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .product-lightbox-inner {
+    width: min(calc(100vw - 20px), 900px);
+    grid-template-columns: 1fr;
+  }
+
+  .product-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+
+  .product-lightbox-prev {
+    left: 8px;
+  }
+
+  .product-lightbox-next {
+    right: 8px;
   }
 
   .inventory-row,

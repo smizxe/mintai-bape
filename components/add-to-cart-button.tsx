@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingCart } from "lucide-react";
+import { MessageCircleMore, ShoppingCart } from "lucide-react";
+import { shouldUseZaloCheckout, ZALO_CONTACT_URL } from "@/lib/shop-config";
 
 export function AddToCartButton({
   productId,
+  priceValue,
   className,
-  label = "Mua ngay",
+  label,
 }: {
   productId: string;
+  priceValue: number;
   className?: string;
   label?: string;
 }) {
@@ -17,6 +20,11 @@ export function AddToCartButton({
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
+    if (shouldUseZaloCheckout(priceValue)) {
+      window.open(ZALO_CONTACT_URL, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -45,10 +53,13 @@ export function AddToCartButton({
     }
   }
 
+  const isZalo = shouldUseZaloCheckout(priceValue);
+  const buttonLabel = label ?? (isZalo ? "Chốt qua Zalo" : "Mua ngay");
+
   return (
     <button type="button" className={className} onClick={handleClick} disabled={loading}>
-      <ShoppingCart size={16} />
-      {loading ? "Đang thêm..." : label}
+      {isZalo ? <MessageCircleMore size={16} /> : <ShoppingCart size={16} />}
+      {loading ? "Đang xử lý..." : buttonLabel}
     </button>
   );
 }

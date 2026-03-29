@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Trash2 } from "lucide-react";
+import { ArrowRight, MessageCircleMore, Trash2 } from "lucide-react";
 import type { CartView } from "@/lib/commerce-store";
+import { shouldUseZaloCheckout } from "@/lib/shop-config";
 
 export function CartClient({ initialCart }: { initialCart: CartView }) {
   const router = useRouter();
@@ -44,6 +45,11 @@ export function CartClient({ initialCart }: { initialCart: CartView }) {
         return;
       }
 
+      if (data?.mode === "zalo" && data?.externalUrl) {
+        window.open(data.externalUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
       if (data?.checkoutUrl) {
         window.location.href = data.checkoutUrl;
         return;
@@ -54,6 +60,8 @@ export function CartClient({ initialCart }: { initialCart: CartView }) {
       setCheckingOut(false);
     }
   }
+
+  const useZalo = shouldUseZaloCheckout(cart.subtotalValue);
 
   return (
     <div className="cart-shell">
@@ -106,14 +114,22 @@ export function CartClient({ initialCart }: { initialCart: CartView }) {
           <aside className="cart-checkout-box">
             <span className="inventory-eyebrow">Tổng đơn</span>
             <strong>{cart.subtotalLabel}</strong>
-            <p>{cart.itemCount} sản phẩm đã sẵn sàng để chốt đơn.</p>
+            <p>
+              {useZalo
+                ? "Đơn giá trị cao sẽ được chủ shop hỗ trợ trực tiếp qua Zalo để chốt nhanh và an toàn hơn."
+                : `${cart.itemCount} sản phẩm đã sẵn sàng để thanh toán ngay.`}
+            </p>
 
             <button type="button" className="hero-cta cart-checkout-cta" onClick={checkout} disabled={checkingOut}>
               <div className="hero-cta-shadow" />
               <div className="hero-cta-front">
                 <span>
-                  {checkingOut ? "Đang chuyển thanh toán..." : "Thanh toán với PayOS"}
-                  <ArrowRight size={18} />
+                  {checkingOut
+                    ? "Đang xử lý..."
+                    : useZalo
+                      ? "Liên hệ Zalo để chốt"
+                      : "Thanh toán với PayOS"}
+                  {useZalo ? <MessageCircleMore size={18} /> : <ArrowRight size={18} />}
                 </span>
               </div>
             </button>

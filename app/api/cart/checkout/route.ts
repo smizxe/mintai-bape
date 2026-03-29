@@ -14,6 +14,7 @@ import {
   getPayOSErrorMessage,
 } from "@/lib/payos";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
+import { shouldUseZaloCheckout, ZALO_CONTACT_URL } from "@/lib/shop-config";
 
 export async function POST(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
@@ -31,6 +32,14 @@ export async function POST(req: NextRequest) {
   const cart = await getCartByUserId(user.id);
   if (cart.items.length === 0) {
     return NextResponse.json({ error: "Giỏ hàng của bạn đang trống." }, { status: 400 });
+  }
+
+  if (shouldUseZaloCheckout(cart.subtotalValue)) {
+    return NextResponse.json({
+      ok: true,
+      mode: "zalo",
+      externalUrl: ZALO_CONTACT_URL,
+    });
   }
 
   let payOS;

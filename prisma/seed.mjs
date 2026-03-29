@@ -1,31 +1,31 @@
+import { randomBytes, scryptSync } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const derived = scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${derived}`;
+}
+
 async function main() {
-  const demoUsers = [
-    {
+  const adminPassword = "Admin@123456";
+
+  await prisma.user.upsert({
+    where: { email: "admin@mintaibape.vn" },
+    update: {
+      displayName: "MinTai Admin",
+      role: "ADMIN",
+      passwordHash: hashPassword(adminPassword),
+    },
+    create: {
       email: "admin@mintaibape.vn",
       displayName: "MinTai Admin",
       role: "ADMIN",
+      passwordHash: hashPassword(adminPassword),
     },
-    {
-      email: "user@mintaibape.vn",
-      displayName: "MinTai User",
-      role: "USER",
-    },
-  ];
-
-  for (const user of demoUsers) {
-    await prisma.user.upsert({
-      where: { email: user.email },
-      update: {
-        displayName: user.displayName,
-        role: user.role,
-      },
-      create: user,
-    });
-  }
+  });
 
   const accountTypes = [
     { name: "Acc gà", slug: "acc-ga", className: "tier-starter", sortOrder: 1 },

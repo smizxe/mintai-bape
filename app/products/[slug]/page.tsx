@@ -58,7 +58,11 @@ export default async function ProductDetailPage({
               />
 
               <div className="product-detail-actions">
-                <AddToCartButton productId={product.id} className="product-detail-cart-button" />
+                <AddToCartButton
+                  productId={product.id}
+                  priceValue={product.priceValue}
+                  className="product-detail-cart-button"
+                />
                 <Link href="/cart">
                   <ShoppingCart size={16} />
                   Xem giỏ hàng
