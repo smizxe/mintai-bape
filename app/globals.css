@@ -4232,3 +4232,282 @@ input {
   color: #fff;
   border-color: #fff;
 }
+
+.shimmer-block,
+.shimmer-card,
+.admin-loading-nav-item,
+.admin-loading-meta,
+.admin-loading-panel,
+.admin-loading-table,
+.admin-loading-row,
+.admin-loading-table-head {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-block::after,
+.shimmer-card::after,
+.admin-loading-nav-item::after,
+.admin-loading-meta::after,
+.admin-loading-panel::after,
+.admin-loading-table::after,
+.admin-loading-row::after,
+.admin-loading-table-head::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 45%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.08) 55%,
+    transparent 100%
+  );
+  animation: routeShimmer 1.3s ease-in-out infinite;
+}
+
+.route-loading-shell {
+  position: relative;
+  min-height: 100vh;
+  padding: 140px 20px 72px;
+  overflow: hidden;
+}
+
+.route-loading-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.route-loading-halftone {
+  position: absolute;
+  top: 84px;
+  right: -12vw;
+  width: 62vw;
+  height: 420px;
+  background-color: var(--rd-red);
+  clip-path: polygon(18% 0, 100% 0, 100% 100%, 2% 100%);
+  opacity: 0.92;
+}
+
+.route-loading-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, transparent 28%),
+    radial-gradient(circle at 22% 30%, rgba(255, 255, 255, 0.04), transparent 34%);
+}
+
+.route-loading-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 34px;
+  border: 4px solid #000;
+  box-shadow: 10px 10px 0 #000;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.93), rgba(247, 241, 231, 0.96));
+  display: grid;
+  gap: 22px;
+}
+
+.route-loading-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  background: var(--rd-red);
+  color: #fff;
+  font-family: var(--font-display), "Oswald", sans-serif;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.route-loading-headline {
+  display: grid;
+  gap: 12px;
+}
+
+.route-loading-line {
+  display: block;
+  height: 28px;
+  background: #181818;
+}
+
+.route-loading-line-lg {
+  width: min(100%, 580px);
+}
+
+.route-loading-line-md {
+  width: min(100%, 460px);
+}
+
+.route-loading-line-sm {
+  width: min(100%, 320px);
+}
+
+.route-loading-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: #222;
+}
+
+.route-loading-spinner {
+  color: var(--rd-red);
+  animation: routeSpin 0.9s linear infinite;
+}
+
+.route-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.route-loading-panel {
+  min-height: 220px;
+  background: #111;
+  border: 3px solid #000;
+  box-shadow: 6px 6px 0 #000;
+}
+
+.admin-loading-shell {
+  min-height: 100vh;
+}
+
+.admin-loading-brand p {
+  color: #c8c8cf;
+}
+
+.admin-loading-main {
+  display: grid;
+  gap: 24px;
+}
+
+.admin-loading-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.admin-loading-title {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-loading-title-lg,
+.admin-loading-title-sm,
+.admin-loading-button {
+  display: block;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-loading-title-lg {
+  width: min(62vw, 360px);
+  height: 28px;
+}
+
+.admin-loading-title-sm {
+  width: min(42vw, 180px);
+  height: 14px;
+}
+
+.admin-loading-button {
+  width: 170px;
+  height: 44px;
+}
+
+.admin-loading-nav-item {
+  height: 52px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-loading-meta {
+  min-height: 126px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-loading-panels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-loading-panel {
+  min-height: 132px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--rd-border);
+  border-radius: 12px;
+}
+
+.admin-loading-table {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--rd-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 14px;
+}
+
+.admin-loading-table-head {
+  height: 44px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+}
+
+.admin-loading-row {
+  height: 72px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+@keyframes routeShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes routeSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-loading-panels,
+  .route-loading-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .route-loading-shell {
+    padding-top: 112px;
+    padding-bottom: 48px;
+  }
+
+  .route-loading-card {
+    padding: 22px 18px;
+    box-shadow: 6px 6px 0 #000;
+  }
+
+  .route-loading-line {
+    height: 22px;
+  }
+
+  .admin-loading-title-lg {
+    width: min(70vw, 280px);
+  }
+
+  .admin-loading-button {
+    width: 140px;
+  }
+}
