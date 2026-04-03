@@ -1,11 +1,12 @@
 ﻿import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, PackageCheck, ShoppingBasket, Sparkles, Tags } from "lucide-react";
+import { ClipboardList, LayoutDashboard, PackageCheck, ShoppingBasket, Sparkles, Tags } from "lucide-react";
 import { AdminShell } from "@/components/admin-shell";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
 import { getAllProducts } from "@/lib/products-store";
 import { getAllAccountTypes } from "@/lib/account-types-store";
+import { getPaidOrdersForAdmin } from "@/lib/commerce-store";
 
 export default async function AdminPage() {
   const cookieStore = await cookies();
@@ -16,9 +17,10 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const [products, accountTypes] = await Promise.all([
+  const [products, accountTypes, soldOrders] = await Promise.all([
     getAllProducts(),
     getAllAccountTypes(),
+    getPaidOrdersForAdmin(),
   ]);
 
   const activeProducts = products.filter((p) => !p.status || p.status === "active");
@@ -28,6 +30,7 @@ export default async function AdminPage() {
     { label: "Tổng sản phẩm", value: String(products.length), icon: ShoppingBasket },
     { label: "Loại acc", value: String(accountTypes.length), icon: Tags },
     { label: "Khu nổi bật", value: "Hero + 3 card", icon: Sparkles },
+    { label: "Đơn đã bán", value: String(soldOrders.length), icon: ClipboardList },
     { label: "Bố cục", value: "Sidebar", icon: LayoutDashboard },
   ];
 
@@ -83,6 +86,7 @@ export default async function AdminPage() {
               <Link href="/admin/products">Quản lý account</Link>
               <Link href="/admin/account-types">Kiểm soát loại acc</Link>
               <Link href="/admin/featured">Quản lý acc nổi bật</Link>
+              <Link href="/admin/orders">Quản lý đơn hàng</Link>
               <Link href="/products">Xem cửa hàng</Link>
             </div>
           </div>

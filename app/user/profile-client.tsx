@@ -82,10 +82,7 @@ export function ProfileClient({
         <div>
           <span className="inventory-eyebrow">Hồ sơ của bạn</span>
           <h1>{profile.displayName}</h1>
-          <p>
-            Theo dõi đơn hàng đã chốt, cập nhật tên hiển thị và giữ tài khoản luôn an toàn trước khi
-            quay lại kho acc.
-          </p>
+          <p>Theo dõi đơn hàng, xem lại thông tin acc đã nhận và quản lý tài khoản mua hàng của bạn tại shop.</p>
         </div>
         <Link href="/products" className="dashboard-link">
           Xem kho acc
@@ -95,7 +92,7 @@ export function ProfileClient({
       <section className="dashboard-stats account-stats">
         <article className="dashboard-stat-card">
           <strong>{orders.length}</strong>
-          <span>Đơn hàng đã hoàn tất</span>
+          <span>Đơn hàng đã tạo</span>
         </article>
         <article className="dashboard-stat-card">
           <strong>{profile.email}</strong>
@@ -111,12 +108,12 @@ export function ProfileClient({
         <div className="dashboard-table-card account-panel">
           <div className="dashboard-card-head">
             <h2>Lịch sử mua hàng</h2>
-            <span>Xem lại các đơn đã chốt và mở chi tiết bất cứ lúc nào.</span>
+            <span>Xem lại chi phí, trạng thái đơn và mở chi tiết để nhận thông tin acc sau khi thanh toán.</span>
           </div>
 
           {orders.length === 0 ? (
             <div className="account-empty">
-              <p>Bạn chưa có đơn hàng nào. Khi chọn được acc ưng ý, đơn sẽ hiện tại đây.</p>
+              <p>Bạn chưa có đơn hàng nào. Khi chọn được acc ưng ý, lịch sử đơn sẽ hiển thị tại đây.</p>
               <Link href="/products" className="dashboard-link">
                 Bắt đầu chọn acc
               </Link>
@@ -151,7 +148,7 @@ export function ProfileClient({
           <section className="dashboard-side-card account-panel">
             <div className="dashboard-card-head">
               <h2>Thông tin tài khoản</h2>
-              <span>Cập nhật tên hiển thị dùng trên hồ sơ của bạn.</span>
+              <span>Cập nhật tên hiển thị để shop hỗ trợ bạn nhanh hơn khi cần xác minh đơn hàng.</span>
             </div>
 
             <form className="account-form" onSubmit={handleProfileSave}>
@@ -171,7 +168,7 @@ export function ProfileClient({
           <section className="dashboard-side-card account-panel">
             <div className="dashboard-card-head">
               <h2>Đổi mật khẩu</h2>
-              <span>Nhập mật khẩu hiện tại và tạo mật khẩu mới để bảo vệ tài khoản.</span>
+              <span>Nhập mật khẩu hiện tại và tạo mật khẩu mới để bảo vệ tài khoản của bạn.</span>
             </div>
 
             <form className="account-form" onSubmit={handlePasswordSave}>
@@ -204,7 +201,7 @@ export function ProfileClient({
           <section className="dashboard-side-card account-panel">
             <div className="dashboard-card-head">
               <h2>Đi nhanh</h2>
-              <span>Quay lại đúng nơi bạn cần chỉ với một lần bấm.</span>
+              <span>Mở đúng nơi bạn cần chỉ với một lần bấm.</span>
             </div>
 
             <div className="dashboard-task-list">

@@ -34,25 +34,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Giỏ hàng của bạn đang trống." }, { status: 400 });
   }
 
-  if (shouldUseZaloCheckout(cart.subtotalValue)) {
+  if (cart.items.some((item) => shouldUseZaloCheckout(item.paymentMode))) {
     return NextResponse.json({
       ok: true,
       mode: "zalo",
       externalUrl: ZALO_CONTACT_URL,
     });
-  }
-
-  const missingDeliveryInfo = cart.items.find(
-    (item) => !item.accountLoginEmail.trim() || !item.accountLoginPassword.trim(),
-  );
-
-  if (missingDeliveryInfo) {
-    return NextResponse.json(
-      {
-        error: `Sản phẩm ${missingDeliveryInfo.title} chưa có thông tin tài khoản để giao tự động. Vui lòng cập nhật lại trong quản trị trước khi thanh toán.`,
-      },
-      { status: 400 },
-    );
   }
 
   let payOS;

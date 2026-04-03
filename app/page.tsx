@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BarChart3, Crosshair, Crown, Menu, Shield } from "lucide-react";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { getAllProducts, getFeaturedHeroProduct, getFeaturedWeekProducts } from "@/lib/products-store";
 
@@ -207,7 +208,7 @@ export default async function Home() {
                   <div className="product-card-bottom">
                     <strong>{account.price}</strong>
                     <div className="product-card-actions">
-                      <Link href="/user">Mua ngay</Link>
+                      <AddToCartButton productId={account.id} paymentMode={account.paymentMode} />
                       <Link href={`/products/${encodeURIComponent(account.code)}`}>
                         Xem chi tiết
                         <ArrowRight size={15} />

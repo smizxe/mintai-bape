@@ -91,11 +91,11 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
       }
 
       if (appliedFilters.sortBy === "price-asc") {
-        return a.priceValue - b.priceValue;
+        return b.priceValue - a.priceValue;
       }
 
       if (appliedFilters.sortBy === "price-desc") {
-        return b.priceValue - a.priceValue;
+        return a.priceValue - b.priceValue;
       }
 
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -327,7 +327,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                   <div className="product-card-bottom">
                     <strong>{account.price}</strong>
                     <div className="product-card-actions">
-                      <AddToCartButton productId={account.id} priceValue={account.priceValue} />
+                      <AddToCartButton productId={account.id} paymentMode={account.paymentMode} />
                       <Link href={`/products/${encodeURIComponent(account.code)}`}>
                         Xem chi tiết
                         <ArrowRight size={15} />

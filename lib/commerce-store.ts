@@ -2,6 +2,7 @@ import { ProductStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPriceLabel } from "@/lib/products-store";
 import { hashPassword, verifyPassword } from "@/lib/session";
+import { shouldUseZaloCheckout } from "@/lib/shop-config";
 
 export type CartItemView = {
   id: string;
@@ -13,8 +14,7 @@ export type CartItemView = {
   priceValue: number;
   lineTotalLabel: string;
   lineTotalValue: number;
-  accountLoginEmail: string;
-  accountLoginPassword: string;
+  paymentMode: string;
 };
 
 export type CartView = {
@@ -37,6 +37,7 @@ export type OrderSummary = {
 };
 
 export type OrderDetail = OrderSummary & {
+  paidAt?: string | null;
   items: Array<{
     id: string;
     title: string;
@@ -45,6 +46,8 @@ export type OrderDetail = OrderSummary & {
     priceLabel: string;
     quantity: number;
     lineTotalLabel: string;
+    accountLoginEmail: string | null;
+    accountLoginPassword: string | null;
   }>;
 };
 
@@ -71,6 +74,27 @@ export type UserProfileView = {
   createdAt: string;
 };
 
+export type AdminOrderView = {
+  id: string;
+  createdAt: string;
+  totalLabel: string;
+  totalValue: number;
+  status: string;
+  paymentOrderCode?: string | null;
+  buyerName: string;
+  buyerEmail: string;
+  itemCount: number;
+  items: Array<{
+    id: string;
+    title: string;
+    productCode: string | null;
+    priceLabel: string;
+    lineTotalLabel: string;
+    accountLoginEmail: string | null;
+    accountLoginPassword: string | null;
+  }>;
+};
+
 type CartWithProducts = Awaited<ReturnType<typeof getOrCreateCart>>;
 
 function mapCart(cart: CartWithProducts): CartView {
@@ -89,8 +113,7 @@ function mapCart(cart: CartWithProducts): CartView {
       priceValue,
       lineTotalLabel: formatPriceLabel(lineTotalValue),
       lineTotalValue,
-      accountLoginEmail: item.product.accountLoginEmail ?? "",
-      accountLoginPassword: item.product.accountLoginPassword ?? "",
+      paymentMode: item.product.paymentMode.toLowerCase(),
     };
   });
 
@@ -227,11 +250,15 @@ export async function addProductToCart(userId: string, productId: string) {
   const cart = await getOrCreateCart(userId);
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, paymentMode: true },
   });
 
   if (!product || product.status !== ProductStatus.ACTIVE) {
     throw new Error("Acc này hiện không còn khả dụng.");
+  }
+
+  if (shouldUseZaloCheckout(product.paymentMode)) {
+    throw new Error("Acc này được chốt qua Zalo. Vui lòng dùng nút liên hệ để trao đổi trực tiếp với shop.");
   }
 
   await prisma.cartItem.upsert({
@@ -281,6 +308,21 @@ export async function createPendingOrderFromCart(input: {
   const hasUnavailableProduct = cart.items.some((item) => item.product.status !== ProductStatus.ACTIVE);
   if (hasUnavailableProduct) {
     throw new Error("Có acc trong giỏ hàng không còn khả dụng. Vui lòng kiểm tra lại trước khi thanh toán.");
+  }
+
+  const hasZaloOnlyProduct = cart.items.some((item) => shouldUseZaloCheckout(item.product.paymentMode));
+  if (hasZaloOnlyProduct) {
+    throw new Error("Có acc trong giỏ đang để chế độ liên hệ qua Zalo. Vui lòng bỏ acc đó khỏi giỏ và chốt trực tiếp với shop.");
+  }
+
+  const missingDeliveryInfo = cart.items.find(
+    (item) =>
+      !shouldUseZaloCheckout(item.product.paymentMode) &&
+      (!item.product.accountLoginEmail?.trim() || !item.product.accountLoginPassword?.trim()),
+  );
+
+  if (missingDeliveryInfo) {
+    throw new Error(`Acc ${missingDeliveryInfo.product.title} chưa có thông tin tài khoản để giao tự động.`);
   }
 
   const totalValue = cart.items.reduce((sum, item) => sum + item.product.priceValue, 0);
@@ -442,7 +484,7 @@ export async function getDeliverableOrderByPaymentCode(paymentOrderCode: string)
     },
   });
 
-  if (!order) return null;
+  if (!order || order.status !== "paid") return null;
 
   return {
     id: order.id,
@@ -509,6 +551,7 @@ export async function getOrderByPaymentCode(paymentOrderCode: string): Promise<O
 
   return {
     ...mapOrderSummary(order),
+    paidAt: order.paidAt?.toISOString() ?? null,
     items: order.items.map((item) => ({
       id: item.id,
       title: item.title,
@@ -517,6 +560,8 @@ export async function getOrderByPaymentCode(paymentOrderCode: string): Promise<O
       priceLabel: item.priceLabel,
       quantity: 1,
       lineTotalLabel: formatPriceLabel(item.priceValue),
+      accountLoginEmail: null,
+      accountLoginPassword: null,
     })),
   };
 }
@@ -548,8 +593,11 @@ export async function getOrderDetailByUserId(userId: string, orderId: string): P
 
   if (!order) return null;
 
+  const canRevealCredentials = order.status === "paid";
+
   return {
     ...mapOrderSummary(order),
+    paidAt: order.paidAt?.toISOString() ?? null,
     items: order.items.map((item) => ({
       id: item.id,
       title: item.title,
@@ -558,6 +606,42 @@ export async function getOrderDetailByUserId(userId: string, orderId: string): P
       priceLabel: item.priceLabel,
       quantity: 1,
       lineTotalLabel: formatPriceLabel(item.priceValue),
+      accountLoginEmail: canRevealCredentials ? item.accountLoginEmail ?? null : null,
+      accountLoginPassword: canRevealCredentials ? item.accountLoginPassword ?? null : null,
     })),
   };
+}
+
+export async function getPaidOrdersForAdmin(): Promise<AdminOrderView[]> {
+  const orders = await prisma.order.findMany({
+    where: { status: "paid" },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: true,
+      items: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  return orders.map((order) => ({
+    id: order.id,
+    createdAt: order.createdAt.toISOString(),
+    totalLabel: order.totalLabel,
+    totalValue: order.totalValue,
+    status: order.status,
+    paymentOrderCode: order.paymentOrderCode,
+    buyerName: order.user.displayName || order.user.email.split("@")[0],
+    buyerEmail: order.user.email,
+    itemCount: order.items.length,
+    items: order.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      productCode: item.productSlug,
+      priceLabel: item.priceLabel,
+      lineTotalLabel: formatPriceLabel(item.priceValue),
+      accountLoginEmail: item.accountLoginEmail ?? null,
+      accountLoginPassword: item.accountLoginPassword ?? null,
+    })),
+  }));
 }

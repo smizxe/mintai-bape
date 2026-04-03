@@ -7,12 +7,12 @@ import { shouldUseZaloCheckout, ZALO_CONTACT_URL } from "@/lib/shop-config";
 
 export function AddToCartButton({
   productId,
-  priceValue,
+  paymentMode,
   className,
   label,
 }: {
   productId: string;
-  priceValue: number;
+  paymentMode?: string;
   className?: string;
   label?: string;
 }) {
@@ -20,7 +20,7 @@ export function AddToCartButton({
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
-    if (shouldUseZaloCheckout(priceValue)) {
+    if (shouldUseZaloCheckout(paymentMode)) {
       window.open(ZALO_CONTACT_URL, "_blank", "noopener,noreferrer");
       return;
     }
@@ -53,7 +53,7 @@ export function AddToCartButton({
     }
   }
 
-  const isZalo = shouldUseZaloCheckout(priceValue);
+  const isZalo = shouldUseZaloCheckout(paymentMode);
   const buttonLabel = label ?? (isZalo ? "Chốt qua Zalo" : "Mua ngay");
 
   return (

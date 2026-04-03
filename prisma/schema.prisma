@@ -20,6 +20,11 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum PaymentMode {
+  AUTOMATIC
+  ZALO
+}
+
 model User {
   id           String      @id @default(cuid())
   email        String      @unique
@@ -50,6 +55,7 @@ model Product {
   doBAPE           String        @default("")
   accountLoginEmail String?
   accountLoginPassword String?
+  paymentMode      PaymentMode   @default(AUTOMATIC)
   isFeaturedHero   Boolean       @default(false)
   featuredWeekRank Int?
   status           ProductStatus @default(ACTIVE)

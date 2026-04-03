@@ -17,7 +17,7 @@ import {
 import { RichTextEditor } from "@/components/rich-text-editor";
 import type { AccountType } from "@/lib/account-types-store";
 import type { AdminProduct } from "@/lib/products-store";
-import { PAYOS_MAX_AMOUNT } from "@/lib/shop-config";
+import { normalizePaymentMode } from "@/lib/shop-config";
 
 const STATUSES = [
   { value: "active", label: "Đang bán" },
@@ -35,6 +35,7 @@ type ProductForm = {
   tag: string;
   tier: string;
   priceValue: string;
+  paymentMode: "automatic" | "zalo";
   skinXe: string;
   thanhGiap: string;
   doBAPE: string;
@@ -54,6 +55,7 @@ const EMPTY_FORM: ProductForm = {
   tag: "",
   tier: "",
   priceValue: "",
+  paymentMode: "automatic",
   skinXe: "",
   thanhGiap: "",
   doBAPE: "",
@@ -94,6 +96,7 @@ function productToForm(product: AdminProduct): ProductForm {
     tag: product.tag,
     tier: product.tier,
     priceValue: String(product.priceValue),
+    paymentMode: normalizePaymentMode(product.paymentMode) as "automatic" | "zalo",
     skinXe: product.skinXe ?? "",
     thanhGiap: product.thanhGiap ?? "",
     doBAPE: product.doBAPE ?? "",
@@ -118,9 +121,8 @@ function tierBadgeColor(className?: string) {
   return map[className || "tier-starter"] || "#7dd35c";
 }
 
-function requiresAccountInfo(priceValue: string) {
-  const numeric = Number(priceValue.replace(/\D/g, "")) || 0;
-  return numeric > 0 && numeric <= PAYOS_MAX_AMOUNT;
+function requiresAccountInfo(paymentMode: string) {
+  return normalizePaymentMode(paymentMode) === "automatic";
 }
 
 function ImageUploader({
@@ -408,10 +410,10 @@ export function AdminProductsClient({
     }
 
     if (
-      requiresAccountInfo(form.priceValue) &&
+      requiresAccountInfo(form.paymentMode) &&
       (!form.accountLoginEmail.trim() || !form.accountLoginPassword.trim())
     ) {
-      setError("Acc dưới 30 triệu cần có email và mật khẩu để giao tự động sau khi khách thanh toán.");
+      setError("Khi chọn thanh toán tự động, bạn cần nhập email và mật khẩu tài khoản để giao cho khách.");
       setSaving(false);
       setFormTab("account");
       return;
@@ -673,6 +675,22 @@ export function AdminProductsClient({
               </label>
 
               <label className="af-field">
+                <span>Kiểu thanh toán</span>
+                <select
+                  value={form.paymentMode}
+                  onChange={(event) =>
+                    setField("paymentMode", event.target.value === "zalo" ? "zalo" : "automatic")
+                  }
+                >
+                  <option value="automatic">Thanh toán tự động</option>
+                  <option value="zalo">Liên hệ qua Zalo</option>
+                </select>
+                <small className="af-field-hint">
+                  Chọn tự động nếu muốn giao acc qua email sau khi thanh toán. Chọn Zalo nếu muốn khách liên hệ trực tiếp.
+                </small>
+              </label>
+
+              <label className="af-field">
                 <span>Mô tả card</span>
                 <textarea
                   value={form.summary}
@@ -753,9 +771,9 @@ export function AdminProductsClient({
               <div className="af-field af-note-block">
                 <span className="af-field-label">Thông tin đăng nhập giao cho khách</span>
                 <small className="af-field-hint">
-                  {requiresAccountInfo(form.priceValue)
-                    ? "Acc dưới 30 triệu bắt buộc có email và mật khẩu để hệ thống gửi tự động sau khi thanh toán."
-                    : "Acc trên 30 triệu có thể để trống vì khách sẽ được chuyển sang Zalo để chốt trực tiếp."}
+                  {requiresAccountInfo(form.paymentMode)
+                    ? "Bạn đang chọn thanh toán tự động, vì vậy cần nhập email và mật khẩu tài khoản để hệ thống giao acc cho khách."
+                    : "Bạn đang chọn liên hệ qua Zalo, nên phần này có thể để trống."}
                 </small>
               </div>
 

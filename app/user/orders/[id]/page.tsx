@@ -65,14 +65,44 @@ export default async function OrderDetailPage({
               <span className="admin-status order-status">{getOrderStatusLabel(order.status)}</span>
             </div>
 
+            {order.status === "paid" ? (
+              <div className="order-detail-note">
+                <strong>Thông tin acc đã sẵn sàng</strong>
+                <span>
+                  Shop đã giao thông tin đăng nhập cho đơn này. Bạn có thể xem lại email, mật khẩu và chi phí từng acc
+                  ngay bên dưới.
+                </span>
+              </div>
+            ) : (
+              <div className="order-detail-note">
+                <strong>Đơn đang chờ hoàn tất</strong>
+                <span>
+                  Thông tin đăng nhập chỉ được hiển thị sau khi thanh toán thành công. Bạn vẫn có thể theo dõi chi phí
+                  và trạng thái đơn ngay tại đây.
+                </span>
+              </div>
+            )}
+
             <div className="order-detail-items">
               {order.items.map((item) => (
                 <article key={item.id} className="order-detail-item">
-                  <div>
+                  <div className="order-detail-item-copy">
                     <strong>{item.title}</strong>
                     <span>
                       {item.quantity} x {item.priceLabel}
                     </span>
+                    {order.status === "paid" ? (
+                      <div className="order-detail-credentials">
+                        <div>
+                          <label>Email acc</label>
+                          <code>{item.accountLoginEmail || "Chưa có"}</code>
+                        </div>
+                        <div>
+                          <label>Mật khẩu</label>
+                          <code>{item.accountLoginPassword || "Chưa có"}</code>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="order-detail-item-meta">
                     <strong>{item.lineTotalLabel}</strong>

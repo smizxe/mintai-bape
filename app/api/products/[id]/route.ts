@@ -10,6 +10,7 @@ import {
 } from "@/lib/products-store";
 import { decodeSession, SESSION_COOKIE } from "@/lib/session";
 import { resolveAccountTypeClass } from "@/lib/account-types-store";
+import { normalizePaymentMode } from "@/lib/shop-config";
 
 function requireAdmin(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
@@ -43,27 +44,24 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     update.tierClass = (await resolveAccountTypeClass(body.tier)) || tierToClass(body.tier);
   }
 
-  let priceValue = existing.priceValue;
-
   if ("priceValue" in body) {
     const normalizedPrice = Number(body.priceValue) || 0;
     update.priceValue = normalizedPrice;
     update.price = formatPriceLabel(normalizedPrice);
-    priceValue = normalizedPrice;
   }
 
-  const credentialError =
-    "priceValue" in body || "accountLoginEmail" in body || "accountLoginPassword" in body
-      ? validateProductCredentials({
-          priceValue,
-          accountLoginEmail:
-            typeof body.accountLoginEmail === "string" ? body.accountLoginEmail.trim() : existing.accountLoginEmail,
-          accountLoginPassword:
-            typeof body.accountLoginPassword === "string"
-              ? body.accountLoginPassword.trim()
-              : existing.accountLoginPassword,
-        })
-      : null;
+  const nextPaymentMode =
+    "paymentMode" in body ? normalizePaymentMode(body.paymentMode) : normalizePaymentMode(existing.paymentMode);
+
+  const credentialError = validateProductCredentials({
+    paymentMode: nextPaymentMode,
+    accountLoginEmail:
+      typeof body.accountLoginEmail === "string" ? body.accountLoginEmail.trim() : existing.accountLoginEmail,
+    accountLoginPassword:
+      typeof body.accountLoginPassword === "string"
+        ? body.accountLoginPassword.trim()
+        : existing.accountLoginPassword,
+  });
 
   if (credentialError) {
     return NextResponse.json({ error: credentialError }, { status: 400 });

@@ -60,7 +60,7 @@ export default async function ProductDetailPage({
               <div className="product-detail-actions">
                 <AddToCartButton
                   productId={product.id}
-                  priceValue={product.priceValue}
+                  paymentMode={product.paymentMode}
                   className="product-detail-cart-button"
                 />
                 <Link href="/cart">

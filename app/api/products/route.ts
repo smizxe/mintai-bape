@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
   const doBAPE = body.doBAPE ?? "";
   const tier = body.tier ?? "Acc gà";
   const priceValue = Number(body.priceValue) || 0;
+  const paymentMode = typeof body.paymentMode === "string" ? body.paymentMode : "automatic";
   const accountLoginEmail = typeof body.accountLoginEmail === "string" ? body.accountLoginEmail.trim() : "";
   const accountLoginPassword =
     typeof body.accountLoginPassword === "string" ? body.accountLoginPassword.trim() : "";
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
   }
 
   const credentialError = validateProductCredentials({
-    priceValue,
+    paymentMode,
     accountLoginEmail,
     accountLoginPassword,
   });
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
     tierClass: tierClass || tierToClass(tier),
     price: formatPriceLabel(priceValue),
     priceValue,
+    paymentMode,
     summary: body.summary ?? "",
     shortDescription: body.shortDescription ?? "",
     descriptionHtml: body.descriptionHtml ?? "",

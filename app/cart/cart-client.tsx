@@ -61,7 +61,7 @@ export function CartClient({ initialCart }: { initialCart: CartView }) {
     }
   }
 
-  const useZalo = shouldUseZaloCheckout(cart.subtotalValue);
+  const useZalo = cart.items.some((item) => shouldUseZaloCheckout(item.paymentMode));
 
   return (
     <div className="cart-shell">
@@ -116,7 +116,7 @@ export function CartClient({ initialCart }: { initialCart: CartView }) {
             <strong>{cart.subtotalLabel}</strong>
             <p>
               {useZalo
-                ? "Đơn giá trị cao sẽ được chủ shop hỗ trợ trực tiếp qua Zalo để chốt nhanh và an toàn hơn."
+                ? "Đơn này sẽ được shop hỗ trợ trực tiếp qua Zalo để chốt nhanh và an toàn hơn."
                 : `${cart.itemCount} sản phẩm đã sẵn sàng để thanh toán ngay.`}
             </p>
 

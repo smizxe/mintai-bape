@@ -2,6 +2,7 @@
 import Link from "next/link";
 import {
   BarChart3,
+  ClipboardList,
   ExternalLink,
   LayoutDashboard,
   Package2,
@@ -11,7 +12,7 @@ import {
 import { LogoutButton } from "@/components/logout-button";
 
 type AdminShellProps = {
-  active: "overview" | "products" | "account-types" | "featured";
+  active: "overview" | "products" | "account-types" | "featured" | "orders";
   sessionName: string;
   children: ReactNode;
 };
@@ -57,6 +58,14 @@ export function AdminShell({ active, sessionName, children }: AdminShellProps) {
           >
             <Sparkles size={18} />
             <span>Quản lý acc nổi bật</span>
+          </Link>
+
+          <Link
+            href="/admin/orders"
+            className={`admin-sidebar-link ${active === "orders" ? "admin-sidebar-link-active" : ""}`}
+          >
+            <ClipboardList size={18} />
+            <span>Quản lý đơn hàng</span>
           </Link>
 
           <Link href="/products" className="admin-sidebar-link">

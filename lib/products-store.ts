@@ -1,6 +1,6 @@
-import { Prisma, ProductStatus } from "@prisma/client";
+import { PaymentMode, Prisma, ProductStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { PAYOS_MAX_AMOUNT } from "@/lib/shop-config";
+import { normalizePaymentMode } from "@/lib/shop-config";
 
 type ProductBase = {
   id: string;
@@ -22,6 +22,7 @@ type ProductBase = {
   badges: Array<{ label: string; className: string }>;
   images: string[];
   status: string;
+  paymentMode: string;
   isFeaturedHero: boolean;
   featuredWeekRank: number | null;
   createdAt: string;
@@ -57,6 +58,10 @@ function statusToDb(status: string | undefined): ProductStatus {
   return ProductStatus.ACTIVE;
 }
 
+function paymentModeToDb(paymentMode?: string | null): PaymentMode {
+  return normalizePaymentMode(paymentMode) === "zalo" ? PaymentMode.ZALO : PaymentMode.AUTOMATIC;
+}
+
 export function tierToClass(tier: string): string {
   const map: Record<string, string> = {
     Mythic: "tier-mythic",
@@ -76,8 +81,8 @@ export function formatPriceLabel(priceValue: number): string {
   return `${priceValue.toLocaleString("vi-VN")}đ`;
 }
 
-export function requiresAccountCredentials(priceValue: number): boolean {
-  return Number.isFinite(priceValue) && priceValue > 0 && priceValue <= PAYOS_MAX_AMOUNT;
+export function requiresAccountCredentials(paymentMode?: string | null): boolean {
+  return normalizePaymentMode(paymentMode) === "automatic";
 }
 
 export function normalizeProductCode(input: string): string {
@@ -99,11 +104,11 @@ export function validateProductCode(input: string): string | null {
 }
 
 export function validateProductCredentials(input: {
-  priceValue: number;
+  paymentMode?: string | null;
   accountLoginEmail?: string | null;
   accountLoginPassword?: string | null;
 }) {
-  if (!requiresAccountCredentials(input.priceValue)) {
+  if (!requiresAccountCredentials(input.paymentMode)) {
     return null;
   }
 
@@ -111,7 +116,7 @@ export function validateProductCredentials(input: {
   const password = input.accountLoginPassword?.trim() ?? "";
 
   if (!email || !password) {
-    return "Acc dưới 30 triệu cần có email và mật khẩu tài khoản để giao tự động sau khi thanh toán.";
+    return "Khi chọn thanh toán tự động, bạn cần nhập email và mật khẩu tài khoản để hệ thống giao acc sau khi thanh toán.";
   }
 
   return null;
@@ -158,6 +163,7 @@ function mapProductBase(record: ProductRecord): ProductBase {
     badges: buildBadgesFromFields(skinXe, thanhGiap, doBAPE, record.tier),
     images: record.images.map((image) => image.imageUrl),
     status: statusToUi(record.status),
+    paymentMode: normalizePaymentMode(record.paymentMode),
     isFeaturedHero: record.isFeaturedHero ?? false,
     featuredWeekRank: record.featuredWeekRank ?? null,
     createdAt: record.createdAt.toISOString(),
@@ -272,6 +278,7 @@ export async function createProduct(data: AdminProductPayload): Promise<AdminPro
   const doBAPE = data.doBAPE ?? "";
   const accountLoginEmail = data.accountLoginEmail?.trim() ?? "";
   const accountLoginPassword = data.accountLoginPassword?.trim() ?? "";
+  const paymentMode = normalizePaymentMode(data.paymentMode);
   const normalizedCode = normalizeProductCode(data.code);
 
   const product = await prisma.product.create({
@@ -292,6 +299,7 @@ export async function createProduct(data: AdminProductPayload): Promise<AdminPro
       doBAPE,
       accountLoginEmail: accountLoginEmail || null,
       accountLoginPassword: accountLoginPassword || null,
+      paymentMode: paymentModeToDb(paymentMode),
       isFeaturedHero: data.isFeaturedHero ?? false,
       featuredWeekRank: data.featuredWeekRank ?? null,
       status: statusToDb(data.status),
@@ -336,6 +344,8 @@ export async function updateProduct(id: string, data: Partial<AdminProductPayloa
     data.accountLoginPassword !== undefined
       ? data.accountLoginPassword.trim()
       : existing.accountLoginPassword ?? "";
+  const nextPaymentMode =
+    data.paymentMode !== undefined ? normalizePaymentMode(data.paymentMode) : normalizePaymentMode(existing.paymentMode);
   const nextCode = data.code !== undefined ? normalizeProductCode(data.code) : existing.code;
 
   const product = await prisma.$transaction(async (tx) => {
@@ -362,6 +372,7 @@ export async function updateProduct(id: string, data: Partial<AdminProductPayloa
         doBAPE: nextDoBAPE,
         accountLoginEmail: nextAccountLoginEmail || null,
         accountLoginPassword: nextAccountLoginPassword || null,
+        paymentMode: paymentModeToDb(nextPaymentMode),
         isFeaturedHero: data.isFeaturedHero,
         featuredWeekRank: data.featuredWeekRank,
         status: data.status ? statusToDb(data.status) : undefined,
